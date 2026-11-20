@@ -80,6 +80,33 @@ function Wait-ForHttp {
     return $false
 }
 
+function Clear-CineramaPort {
+    param(
+        [int]$Port,
+        [string[]]$ExpectedProcesses,
+        [string]$Component
+    )
+
+    $conexiones = @()
+    try {
+        $conexiones = @(Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction Stop)
+    } catch {
+        return
+    }
+
+    foreach ($processId in ($conexiones | Select-Object -ExpandProperty OwningProcess -Unique)) {
+        if (-not $processId -or $processId -le 0) { continue }
+        $proceso = Get-Process -Id $processId -ErrorAction SilentlyContinue
+        if ($null -eq $proceso) { continue }
+        if ($ExpectedProcesses -notcontains $proceso.ProcessName) {
+            throw "El puerto $Port está ocupado por $($proceso.ProcessName) (PID $processId). Ciérralo y vuelve a iniciar Cinerama."
+        }
+        Write-Host "Cerrando la instancia anterior de $Component (PID $processId)..."
+        Stop-Process -Id $processId -Force -ErrorAction SilentlyContinue
+        $proceso.WaitForExit(10000) | Out-Null
+    }
+}
+
 function Test-BackendBuildRequired {
     param([string]$BackendDir, [string]$JarPath)
 
@@ -148,6 +175,11 @@ try {
     if (-not (Test-Port -Port 1521)) {
         throw 'Oracle XE no respondió en el puerto 1521. Revisa sus servicios y la configuración local de Oracle.'
     }
+
+    # Una instancia anterior mantiene el jar bloqueado y la compilación falla
+    # dejándolo a medias; se cierra antes de recompilar.
+    Clear-CineramaPort -Port 8082 -ExpectedProcesses @('java') -Component 'el backend'
+    Clear-CineramaPort -Port 4200 -ExpectedProcesses @('node') -Component 'la web'
 
     if (Test-BackendBuildRequired -BackendDir $backendDir -JarPath $jarPath) {
         # Sin esto se ejecutaba un jar viejo: la web cargaba datos pero el login
