@@ -1,0 +1,46 @@
+<section class="contenedor seccion">
+  <h1 class="titulo-seccion">Cartelera</h1>
+  <p class="subtitulo">Selecciona una película para ver sus funciones y butacas disponibles</p>
+
+  @if (cargando()) {
+    <div class="cargando"><span class="spinner-border spinner-border-sm"></span> Cargando…</div>
+  } @else if (error()) {
+    <div class="aviso">{{ error() }}</div>
+  } @else if (peliculas().length === 0) {
+    <div class="vacio"><i class="bi bi-film"></i> No hay películas activas por ahora.</div>
+  } @else {
+    <div class="filtros-fila">
+      <div class="buscador">
+        <i class="bi bi-search"></i>
+        <input type="search" placeholder="Buscar película"
+               [value]="busqueda()" (input)="buscar($event)">
+      </div>
+      <label class="orden">
+        <span class="tenue chico">Orden</span>
+        <select class="form-select form-select-sm" [value]="orden()"
+                (change)="orden.set($any($event.target).value)">
+          <option value="RECIENTES">Más recientes</option>
+          <option value="AZ">Título A–Z</option>
+        </select>
+      </label>
+      <span class="tenue chico resultado">{{ filtradas().length }} de {{ peliculas().length }}</span>
+    </div>
+
+    <div class="filtros">
+      <button class="chip" [class.activo]="genero() === 'TODOS'" (click)="genero.set('TODOS')">Todas</button>
+      @for (g of generos(); track g) {
+        <button class="chip" [class.activo]="genero() === g" (click)="genero.set(g)">{{ g }}</button>
+      }
+    </div>
+
+    @if (filtradas().length === 0) {
+      <div class="vacio"><i class="bi bi-search"></i> No se encontraron películas con ese filtro.</div>
+    } @else {
+      <div class="grilla">
+        @for (p of filtradas(); track p.idPelicula) {
+          <app-pelicula-card [pelicula]="p"></app-pelicula-card>
+        }
+      </div>
+    }
+  }
+</section>

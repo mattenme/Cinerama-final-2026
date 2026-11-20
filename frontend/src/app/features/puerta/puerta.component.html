@@ -1,0 +1,134 @@
+<section class="contenedor seccion">
+  <div class="puerta-cabecera">
+    <div>
+      <h1 class="titulo-seccion">Puerta</h1>
+      <p class="subtitulo">Valida la entrada del cliente. Cada QR sirve una sola vez.</p>
+    </div>
+    <a class="btn-fantasma chico" routerLink="/home"><i class="bi bi-house"></i> Inicio</a>
+  </div>
+
+  <div class="puerta-grid">
+    <div class="panel">
+      <h2 class="titulo-seccion">Cámara</h2>
+
+      @if (errorCamara()) {
+        <div class="aviso mb-3">{{ errorCamara() }}</div>
+      }
+
+      <div class="camara" [class.activa]="camaraActiva()">
+        <video #video playsinline muted></video>
+        @if (!camaraActiva()) {
+          <div class="camara-apagada">
+            <i class="bi bi-qr-code-scan"></i>
+            <span>{{ soportaCamara ? 'Cámara detenida' : 'Este navegador no lee QR' }}</span>
+          </div>
+        }
+      </div>
+
+      <div class="acciones-camara">
+        @if (!camaraActiva()) {
+          <button class="btn-acento ancho" type="button" (click)="iniciarCamara()">
+            <i class="bi bi-camera-video"></i> Iniciar cámara
+          </button>
+        } @else {
+          <button class="btn-fantasma ancho" type="button" (click)="detenerCamara()">
+            <i class="bi bi-stop-circle"></i> Detener cámara
+          </button>
+        }
+      </div>
+
+      <hr>
+
+      <h2 class="titulo-seccion">Entrada manual</h2>
+      <form (ngSubmit)="validar()" class="manual">
+        <input
+          class="form-control"
+          name="codigo"
+          [ngModel]="codigo()"
+          (ngModelChange)="codigo.set($event)"
+          placeholder="CIN-XXXXXXXX"
+          autocomplete="off"
+          autocapitalize="characters">
+        <button class="btn-acento" type="submit" [disabled]="validando()">
+          @if (validando()) {
+            <span class="spinner-border spinner-border-sm"></span> Validando…
+          } @else {
+            Validar
+          }
+        </button>
+      </form>
+    </div>
+
+    <div class="panel">
+      <h2 class="titulo-seccion">Resultado</h2>
+
+      @if (resultado(); as r) {
+        <div class="resultado" [class.ok]="r.resultado === 'VALIDO'" [class.no]="!esValido()">
+          <div class="resultado-icono">
+            <i class="bi" [class.bi-check-circle-fill]="esValido()"
+               [class.bi-x-circle-fill]="!esValido()"></i>
+          </div>
+          <strong class="resultado-titulo">{{ r.resultado.replace('_', ' ') }}</strong>
+          <p>{{ r.mensaje }}</p>
+
+          @if (r.tituloPelicula) {
+            <div class="ficha">
+              <div><span class="tenue chico">Película</span><strong>{{ r.tituloPelicula }}</strong></div>
+              <div><span class="tenue chico">Sala</span><strong>{{ r.nombreSala }}</strong></div>
+              <div><span class="tenue chico">Función</span><strong>{{ fecha(r.horaInicio) }}</strong></div>
+              <div><span class="tenue chico">Butacas</span><strong>{{ r.asientos || '—' }}</strong></div>
+              <div><span class="tenue chico">Cliente</span><strong>{{ r.nombreCliente }}</strong></div>
+              <div><span class="tenue chico">Código</span><strong class="mono">{{ r.codigoQr }}</strong></div>
+            </div>
+          }
+        </div>
+
+        <button class="btn-fantasma ancho mt-3" type="button" (click)="escanearOtra()">
+          <i class="bi bi-upc-scan"></i> Escanear otra entrada
+        </button>
+      } @else {
+        <div class="vacio">
+          <i class="bi bi-upc-scan"></i>
+          Escanea o escribe un código para ver el resultado.
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="panel mt-4">
+    <h2 class="titulo-seccion">Últimas validaciones</h2>
+
+    @if (historial().length === 0) {
+      <div class="vacio">Todavía no hay lecturas registradas.</div>
+    } @else {
+      <div class="tabla-scroll">
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Resultado</th>
+              <th>Código</th>
+              <th>Película</th>
+              <th>Butacas</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (v of historial(); track v.idValidacion) {
+              <tr>
+                <td>{{ fecha(v.fecha) }}</td>
+                <td>
+                  <span class="pildora" [class.ok]="v.resultado === 'VALIDO'" [class.no]="v.resultado !== 'VALIDO'">
+                    {{ v.resultado.replace('_', ' ') }}
+                  </span>
+                </td>
+                <td class="mono">{{ v.codigoQr }}</td>
+                <td>{{ v.tituloPelicula || '—' }}</td>
+                <td>{{ v.asientos || '—' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</section>

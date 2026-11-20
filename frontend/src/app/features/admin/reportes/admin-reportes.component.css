@@ -1,0 +1,38 @@
+.panel { margin-bottom: 18px; }
+.filtros .etiqueta { align-self: center; margin-right: 2px; }
+.panel-cabecera { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.panel-cabecera h2 { font-size: 1.05rem; margin: 0 0 10px; }
+.rejilla { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.dato { background: var(--superficie-2, rgba(255,255,255,.04)); border-radius: 10px; padding: 12px 14px; display: grid; gap: 2px; }
+.dato strong { font-size: 1.15rem; }
+.dato .total { color: var(--acento, #ffc107); }
+.barra { height: 8px; border-radius: 99px; background: rgba(255,255,255,.1); overflow: hidden; min-width: 110px; }
+.barra span { display: block; height: 100%; background: var(--acento, #ffc107); }
+.ancho { min-width: 130px; }
+.vacio.chico { padding: 18px; font-size: .9rem; }
+.variacion { font-weight: 600; white-space: nowrap; }
+.variacion.sube { color: #4caf7d; }
+.variacion.baja { color: #e26a6a; }
+.variacion.neutro { color: var(--tenue, rgba(255,255,255,.55)); font-weight: 400; }
+
+.grafico { display: flex; flex-direction: column; gap: 10px; padding: 4px 0 8px; }
+.barra-fila { display: grid; grid-template-columns: minmax(110px, 200px) 1fr 90px; gap: 12px; align-items: center; }
+.barra-etiqueta {
+  font-size: .8rem;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.barra-pista { height: 10px; border-radius: 2px; background: var(--surface-2); overflow: hidden; }
+.barra-relleno {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--acento);
+  transition: width .5s ease;
+}
+.barra-valor { font-size: .8rem; text-align: right; color: var(--texto); }
+@media (max-width: 640px) {
+  .barra-fila { grid-template-columns: 1fr 70px; }
+  .barra-etiqueta { grid-column: 1 / -1; }
+}

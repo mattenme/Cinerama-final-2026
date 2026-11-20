@@ -1,0 +1,3 @@
+.descripcion { max-width: 320px; white-space: normal; color: var(--muted); font-size: .88rem; }
+.btn-icono[title="Marcar en revisión"] { color: var(--acento); border-color: rgba(214, 40, 40, .35); }
+.btn-icono[title="Marcar resuelta"] { color: var(--exito); border-color: rgba(79, 209, 139, .35); }

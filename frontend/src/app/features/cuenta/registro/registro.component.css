@@ -1,0 +1,7 @@
+.auth { display: flex; justify-content: center; padding-top: 40px; }
+.caja { width: 100%; max-width: 460px; padding: 28px; }
+.caja h1 { font-size: 1.7rem; font-weight: 900; margin: 8px 0 4px; }
+.fila { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ancho { width: 100%; }
+.chico { font-size: .84rem; }
+.codigo { letter-spacing: 8px; font-size: 1.15rem; text-align: center; font-weight: 700; }

@@ -1,0 +1,34 @@
+.panel-toolbar { margin-bottom: 6px; }
+.filtros { margin-top: 0; }
+.filtros .separador { width: 1px; align-self: stretch; background: var(--linea); margin: 0 4px; }
+
+.quien { display: flex; align-items: center; gap: 10px; }
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--acento-suave);
+  color: var(--acento);
+  font-weight: 700;
+  font-size: .9rem;
+  flex: 0 0 auto;
+}
+.quien strong { font-size: .92rem; }
+.contacto { font-size: .88rem; }
+
+.estados { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.pildora.rol { color: var(--muted); }
+.pildora.suave { gap: 3px; }
+
+.paginacion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 4px 2px;
+  border-top: 1px solid var(--linea);
+  margin-top: 12px;
+}
+.paginacion .btn-fantasma:disabled { opacity: .45; }

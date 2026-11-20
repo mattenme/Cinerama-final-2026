@@ -1,0 +1,28 @@
+.pie { background: var(--bg-2); border-top: 1px solid var(--linea); margin-top: 40px; }
+.pie-interior {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr 1fr;
+  gap: 26px;
+  padding: 38px 20px 26px;
+}
+.pie-logo { font-weight: 700; letter-spacing: .22em; font-size: 1.1rem; color: var(--texto); }
+.pie-marca p { color: var(--muted); font-size: .86rem; margin: 10px 0 0; max-width: 280px; }
+.pie-col { display: flex; flex-direction: column; gap: 8px; font-size: .86rem; color: var(--muted); }
+.pie-col strong { color: var(--texto); font-size: .82rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+.pie-col a { color: var(--muted); }
+.pie-col a:hover { color: var(--acento); }
+.pie-final {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--linea);
+  color: var(--muted);
+  font-size: .78rem;
+  flex-wrap: wrap;
+}
+@media (max-width: 860px) {
+  .pie-interior { grid-template-columns: 1fr 1fr; }
+}
+
+.pie-col a { transition: color .15s ease; display: inline-block; }

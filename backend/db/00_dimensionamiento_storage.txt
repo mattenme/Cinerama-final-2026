@@ -1,0 +1,228 @@
+=====================================================================
+CINERAMA - DIMENSIONAMIENTO DEL STORAGE
+Aproximacion del espacio que ocupan los datos en Oracle (8K)
+=====================================================================
+
+Este archivo explica, con las multiplicaciones a la vista, de donde salen
+los valores INITIAL / NEXT / PCTINCREASE que se declaran en
+01_ddl_tablas_storage.sql.
+
+IMPORTANTE: el script 01_ddl_tablas_storage.sql NO se ejecuta en esta
+instancia porque requiere privilegios sobre el tablespace (crear el
+segmento con una clausula STORAGE propia). El dimensionamiento se entrega
+como explicacion escrita en este TXT; el DDL queda solo como referencia
+del diseno. Los numeros de abajo son los que se sustentan en la defensa.
+
+1. BASE DEL CALCULO
+---------------------------------------------------------------------
+Bloque Oracle .......................... 8.192 bytes (8K)
+PCTFREE 10 ............................. 10% del bloque se reserva para
+                                        futuras actualizaciones de fila,
+                                        asi que quedan utiles:
+                                        8.192 * 0.90 = 7.372 bytes/bloque
+
+Fila Oracle = cabecera (3 bytes) + 1 byte por columna (mapa de nulos) +
+             suma de los bytes de cada columna.
+
+Las columnas VARCHAR2 se miden por su contenido promedio, no por el
+maximo declarado: Oracle guarda solo el texto real.
+
+2. TAMANO DE UNA FILA POR TABLA
+---------------------------------------------------------------------
+PELICULA (8 columnas)          aprox. 540 B por fila
+   ID 6 + TITULO 35 + DURACION 3 + GENERO 10 + SINOPSIS 400 +
+   IMAGEN_URL 80 + DESTACADO 1 + ACTIVO 1 = 536 B + cabecera 4 B
+   -> se usa 540 B (la sinopsis es lo que mas pesa).
+
+SALA (5 columnas)              aprox.  80 B por fila
+   ID 6 + NOMBRE 20 + TIPO 15 + CAPACIDAD 3 + ACTIVO 1 = 45 B + 4 B
+   -> 80 B incluye el espacio libre del bloque y el margen de fila.
+
+PRODUCTO (7 columnas)          aprox. 170 B por fila
+   ID 6 + NOMBRE 30 + DESCRIPCION 90 + PRECIO 4 + URL 30 + CATEGORIA 12
+   + ACTIVO 1 = 173 B + cabecera.
+
+PROMOCION (5 columnas)         aprox.  90 B por fila
+   ID 6 + CODIGO 15 + DESCRIPCION 60 + DESCUENTO 2 + ACTIVO 1 + 4 B.
+
+ASIENTO (5 columnas)           aprox.  45 B por fila
+   ID 6 + ID_SALA 3 + FILA 2 + NUMERO 3 + ESTADO 10 = 24 B + 4 B
+   (el estado 'Disponible' ocupa 10 bytes).
+
+CLIENTE (14 columnas)          aprox. 150 B por fila
+   ID 6 + DNI 10 + NOMBRE 35 + EMAIL 25 + TELEFONO 10 + PASSWORD 60 +
+   ROL 8 + ACTIVO 1 + VERIFICADO 1 + CODIGO_VERIFICACION 0 (nulo la
+   mayor parte del tiempo) + EXPIRA 0 + INTENTOS 2 + BLOQUEADO 0
+   = 158 B + cabecera. Se redondea a 150 B porque los nulos casi no
+   consumen (solo 1 bit en el mapa de nulos).
+
+FUNCION (7 columnas)           aprox.  60 B por fila
+   ID 6 + ID_PELICULA 3 + ID_SALA 3 + HORA_INICIO 7 + ESTADO 12 +
+   ACTIVO 1 + PRECIO 4 = 36 B + cabecera y margen.
+
+INCIDENCIA (9 columnas)        aprox. 250 B por fila
+   ID 6 + TIPO 25 + DESCRIPCION 180 + 3 FKs 9 + FECHA 7 + ESTADO 12.
+
+CALIFICACION (5 columnas)      aprox. 130 B por fila
+   2 FKs 6 + PUNTUACION 2 + COMENTARIO 100 + FECHA 7 + cabecera.
+
+COMPRA (13 columnas)           aprox. 230 B por fila
+   ID 6 + ID_CLIENTE 3 + ID_FUNCION 3 + PRECIO 4 + METODO_PAGO 12 +
+   ESTADO 10 + CODIGO_QR 20 + FECHA 7 + PRODUCTOS 120 + TOTAL 4 +
+   USADO 1 + ASIENTOS 25 + FECHA_USO 7 = ~235 B.
+
+COMPRA_DETALLE (5 columnas)    aprox.  40 B por fila
+   ID 6 + 3 FKs 9 + PRECIO 4 = 19 B + cabecera 4 B + margen = 40 B.
+
+VALIDACION (8 columnas)        aprox. 110 B por fila
+   ID 6 + COMPRA 3 + QR 20 + EMPLEADO 3 + FECHA 7 + RESULTADO 12 +
+   MENSAJE 40 + cabecera.
+
+3. CUANTAS FILAS CABEN EN UN BLOQUE Y EN LA PRIMERA EXTENSION
+---------------------------------------------------------------------
+filas por bloque = 7.372 / tamano de fila
+bloques de 64K   = 65.536 / 8.192 = 8 bloques
+filas por INITIAL = filas por bloque * 8
+
+CLIENTE     7.372 / 150 = 49 filas/bloque
+            49 * 8 = 392 clientes en la extension inicial de 64K
+PELICULA    7.372 / 540 = 13 filas/bloque
+            13 * 8 = 104 peliculas en 64K
+ASIENTO     7.372 /  45 = 163 filas/bloque
+            163 * 8 = 1.304 butacas en 64K
+COMPRA      7.372 / 230 =  32 filas/bloque
+            32 * 8 = 256 compras en 64K
+COMPRA_DET 7.372 /  40 = 184 filas/bloque
+            184 * 8 = 1.472 butacas vendidas en 64K
+
+4. CUANTOS DATOS SE ESPERAN (UN ANIO DE OPERACION)
+---------------------------------------------------------------------
+Supuestos de un cine de 10 salas, 300 butacas promedio y 4 funciones
+por sala al dia:
+
+Butacas totales
+   10 salas * 300 butacas            = 3.000 asientos
+
+Cartelera
+   200 peliculas en catalogo (historico incluido)
+   200 peliculas * 540 B             = 108.000 B  = 105 KB
+
+Funciones
+   10 salas * 4 funciones * 365 dias = 14.600 funciones/anio
+   14.600 * 60 B                     = 876.000 B  = 856 KB
+
+Clientes
+   10.000 clientes registrados
+   10.000 * 150 B                    = 1.500.000 B = 1.465 KB = 1,43 MB
+
+Compras (ocupacion promedio 30%)
+   14.600 funciones * (300 * 0,30) butacas = 1.314.000 butacas/anio
+   ticket promedio de 2 butacas por compra:
+   1.314.000 / 2                     = 657.000 compras/anio
+   657.000 * 230 B                   = 151.110.000 B = 144 MB
+
+Detalle de compra (una fila por butaca)
+   1.314.000 * 40 B                  = 52.560.000 B  = 50 MB
+
+Dulceria, promociones, incidencias y calificaciones
+   PRODUCTO      200 * 170 B         =    34.000 B  =  33 KB
+   PROMOCION      20 *  90 B         =     1.800 B  =   2 KB
+   INCIDENCIA  1.000 * 250 B         =   250.000 B  = 244 KB
+   CALIFICACION 3.000 * 130 B        =   390.000 B  = 381 KB
+   VALIDACION (1 por entrada usada)
+   657.000 * 110 B                   =  72.270.000 B =  69 MB
+
+   Nota: 657.000 compras/anio es el techo teorico. Con 30% de ocupacion
+   y 2 butacas por compra el numero es alto; un cine real vende entre
+   150.000 y 250.000 entradas al anio, es decir 75.000 a 125.000
+   compras. El calculo se deja en el escenario mas exigente para que el
+   storage no quede corto.
+
+5. TOTAL DE SEGMENTOS (ESCENARIO EXIGENTE)
+---------------------------------------------------------------------
+Catalogo y configuracion        ~   1,0 MB
+ASIENTO 3.000 * 45 B            ~   0,2 MB
+CLIENTE                         ~   1,4 MB
+FUNCION                         ~   0,9 MB
+COMPRA                          ~ 144,0 MB
+COMPRA_DETALLE                  ~  50,0 MB
+VALIDACION                      ~  69,0 MB
+Resto (dulceria, incidencias)   ~   0,7 MB
+------------------------------------------------
+Datos (tablas)                  ~ 267,2 MB
+
+Indices (PK, UNIQUE y FKs)
+   Se estima entre 30% y 40% del dato. Para COMPRA y COMPRA_DETALLE el
+   indice unico (ID_FUNCION, ID_ASIENTO) repite dos NUMBER (6+6 B) mas
+   el ROWID (10 B) por fila:
+      1.314.000 * 22 B            = 28.908.000 B = 27,6 MB
+   PK de COMPRA_DETALLE: 1.314.000 * 16 B = 21 MB
+   PK y FK restantes           ~  20 MB
+   Indices                     ~  70 MB
+------------------------------------------------
+TOTAL APROXIMADO ANUAL         ~ 340 MB
+
+6. POR QUE ESOS VALORES DE STORAGE
+---------------------------------------------------------------------
+INITIAL 64K
+   64K = 8 bloques = el minimo util. Para las tablas de catalogo
+   (PELICULA, SALA, PRODUCTO, PROMOCION) el catalogo completo de un cine
+   pequeno entra en esa primera extension: 104 peliculas, 819 salas de
+   80 B (7.372/80=92 filas por bloque * 8) o 433 productos.
+
+NEXT 64K / 128K / 256K
+   Se elige por frecuencia de crecimiento:
+   * 64K   catalogo, asientos, funciones, incidencias, calificaciones
+   * 128K  CLIENTE: 1.500.000 B / 131.072 B = 12 extensiones para
+           10.000 clientes. Con 64K harian 23 extensiones.
+   * 256K  COMPRA y COMPRA_DETALLE, que crecen con cada venta.
+   Cada extension debe ser varias veces mayor que la anterior del mismo
+   orden para que Oracle no tenga que encadenar miles de extensiones.
+
+PCTINCREASE 0
+   Oracle aplica 50% por defecto: 64K, 96K, 144K, 216K... El segmento
+   crece de forma exponencial y el espacio reservado deja de ser
+   predecible.
+   Con PCTINCREASE 0 todas las extensiones miden lo mismo:
+       COMPRA: 144 MB / 256 KB = 576 extensiones exactas
+   El espacio es predecible, no se fragmenta y el tablespace se puede
+   planificar. Ademas, en un tablespace con AUTOALLOCATE (el caso de
+   USERS en esta instancia), Oracle ignora NEXT y elige el tamano por
+   si mismo: por eso el DDL se documenta como referencia y no se aplica
+   con ALTER TABLE ... STORAGE (falla con ORA-25150).
+
+PCTFREE 10
+   El 10% de cada bloque queda libre para que una actualizacion que
+   alargue la fila no obligue a moverla a otro bloque (migrated row).
+   En este esquema las actualizaciones habituales (ESTADO de COMPRA,
+   ACTIVO de catalogo, USADO de la entrada) no alargan la fila, asi que
+   el 10% por defecto es suficiente.
+
+7. COMO COMPROBARLO EN LA BASE
+---------------------------------------------------------------------
+-- Tamano real de cada tabla e indice (en bloques y MB)
+SELECT segment_name, segment_type,
+       blocks * 8192 / 1024 / 1024 AS mb
+  FROM user_segments
+ ORDER BY blocks DESC;
+
+-- Espacio libre dentro de cada bloque (PCTFREE real)
+SELECT table_name, pct_free, pct_used, avg_row_len, num_rows, blocks
+  FROM user_tables
+ ORDER BY blocks DESC;
+
+-- Extensiones asignadas a una tabla
+SELECT segment_name, extent_id, bytes / 1024 AS kb
+  FROM user_extents
+ WHERE segment_name = 'COMPRA'
+ ORDER BY extent_id;
+
+-- Promedio real de bytes por fila (reemplaza a los valores estimados)
+ANALYZE TABLE CLIENTE COMPUTE STATISTICS;
+SELECT table_name, num_rows, avg_row_len
+  FROM user_tables
+ WHERE table_name = 'CLIENTE';
+
+avg_row_len de USER_TABLES es la medicion real que confirma (o corrige)
+las estimaciones de la seccion 2.
+=====================================================================

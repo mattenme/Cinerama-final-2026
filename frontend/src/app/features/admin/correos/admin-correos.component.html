@@ -1,0 +1,86 @@
+<section class="contenedor admin">
+  <div class="admin-cabecera">
+    <div>
+      <h1 class="titulo-seccion">Administración</h1>
+      <p class="subtitulo">Correos que generó el sistema (entradas, códigos de verificación)</p>
+    </div>
+    <div class="acciones">
+      <button class="btn-fantasma" type="button" (click)="cargar()">
+        <i class="bi bi-arrow-clockwise"></i> Actualizar
+      </button>
+      <button class="btn-fantasma peligro" type="button" (click)="limpiar()">
+        <i class="bi bi-trash"></i> Vaciar
+      </button>
+    </div>
+  </div>
+
+  <app-admin-nav></app-admin-nav>
+
+  @if (error()) {
+    <div class="aviso">{{ error() }}</div>
+  }
+
+  <div class="panel">
+    <div class="panel-cabecera">
+      <h2>Probar SMTP</h2>
+      <span class="tenue chico">POST /api/v1/admin/correo/prueba</span>
+    </div>
+    <div class="prueba">
+      <input class="form-control" type="email" placeholder="destino@correo.com"
+             [value]="destino()" (input)="destino.set($any($event.target).value)">
+      <button class="btn-acento" type="button" [disabled]="probando()" (click)="probar()">
+        @if (probando()) {
+          <span class="spinner-border spinner-border-sm"></span> Probando…
+        } @else {
+          <i class="bi bi-send"></i> Enviar prueba
+        }
+      </button>
+    </div>
+    <p class="tenue chico mb-0">
+      Sin SMTP configurado el envío falla, pero el correo queda guardado abajo con su HTML y su QR.
+    </p>
+  </div>
+
+  <div class="panel">
+    <div class="panel-cabecera">
+      <h2>Bandeja</h2>
+      <span class="tenue chico">{{ correos().length }} correo(s) en memoria</span>
+    </div>
+
+    @if (cargando()) {
+      <div class="cargando"><span class="spinner-border spinner-border-sm"></span> Cargando bandeja…</div>
+    } @else if (correos().length === 0) {
+      <div class="vacio"><i class="bi bi-inbox"></i>
+        Todavía no hay correos. Compra una entrada para ver el correo de confirmación.
+      </div>
+    } @else {
+      <div class="bandeja">
+        @for (c of correos(); track $index) {
+          <article class="correo" [class.abierto]="abierto() === $index">
+            <button class="correo-fila" type="button" (click)="alternar($index)">
+              <span class="pildora" [class.ok]="c.enviado" [class.no]="!c.enviado">
+                {{ c.enviado ? 'Enviado' : 'Solo local' }}
+              </span>
+              <span class="destino">{{ c.destino }}</span>
+              <span class="asunto">{{ c.asunto }}</span>
+              @if (c.codigoQr) { <span class="mono chico">{{ c.codigoQr }}</span> }
+              <span class="tenue chico fecha">{{ fecha(c.fecha) }}</span>
+              <i class="bi" [class.bi-chevron-down]="abierto() !== $index" [class.bi-chevron-up]="abierto() === $index"></i>
+            </button>
+
+            @if (abierto() === $index) {
+              <div class="correo-cuerpo">
+                @if (c.detalle) { <p class="tenue chico">{{ c.detalle }}</p> }
+                @if (c.html) {
+                  <iframe class="vista" [srcdoc]="c.html" sandbox="" title="Vista previa del correo"></iframe>
+                } @else {
+                  <p class="tenue chico mb-0">Este correo no guardó HTML.</p>
+                }
+              </div>
+            }
+          </article>
+        }
+      </div>
+    }
+  </div>
+</section>

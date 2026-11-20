@@ -1,0 +1,57 @@
+<section class="contenedor seccion">
+  <h1 class="titulo-seccion">Soporte</h1>
+  <p class="subtitulo">Reporta un problema y revisa el estado de tus incidencias.</p>
+
+  <div class="panel formulario">
+    <h2 class="titulo-seccion">Nueva incidencia</h2>
+
+    <label class="form-label">Tipo de problema *</label>
+    <select class="form-select mb-3" name="tipo" [(ngModel)]="tipo">
+      @for (t of tipos; track t) {
+        <option [ngValue]="t">{{ t }}</option>
+      }
+    </select>
+
+    <label class="form-label">Descripción *</label>
+    <textarea class="form-control mb-3" rows="3" maxlength="500" name="descripcion"
+              [(ngModel)]="descripcion" placeholder="Cuéntanos qué pasó (película, función, butaca, etc.)"></textarea>
+
+    <button class="btn-acento" type="button" [disabled]="enviando()" (click)="enviar()">
+      @if (enviando()) {
+        <span class="spinner-border spinner-border-sm"></span> Enviando…
+      } @else {
+        <i class="bi bi-send"></i> Enviar incidencia
+      }
+    </button>
+  </div>
+
+  <h2 class="titulo-seccion mt-4">Mis incidencias</h2>
+
+  @if (cargando()) {
+    <div class="cargando"><span class="spinner-border spinner-border-sm"></span> Cargando…</div>
+  } @else if (incidencias().length === 0) {
+    <div class="vacio"><i class="bi bi-inbox"></i> Todavía no has reportado ninguna incidencia.</div>
+  } @else {
+    <div class="lista">
+      @for (i of incidencias(); track i.idIncidencia) {
+        <article class="panel incidencia">
+          <div class="cabecera">
+            <strong>{{ i.tipo }}</strong>
+            <span class="pildora"
+                  [class.ok]="i.estado === 'RESUELTA'"
+                  [class.neutra]="i.estado === 'EN_REVISION'"
+                  [class.no]="i.estado === 'PENDIENTE'">
+              {{ textoEstado(i.estado) }}
+            </span>
+          </div>
+          @if (i.descripcion) { <p>{{ i.descripcion }}</p> }
+          <span class="tenue chico">{{ fecha(i.fechaReporte) }}</span>
+        </article>
+      }
+    </div>
+  }
+
+  <p class="tenue chico mt-3">
+    ¿Necesitas revisar tus entradas? <a class="acento" routerLink="/mis-compras">Mis compras</a>
+  </p>
+</section>

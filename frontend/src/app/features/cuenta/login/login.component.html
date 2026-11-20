@@ -1,0 +1,49 @@
+<section class="contenedor seccion auth">
+  <div class="panel caja">
+    <span class="etiqueta"><i class="bi bi-person-badge"></i> {{ modoAdmin ? 'Administración' : 'Mi cuenta' }}</span>
+    <h1>{{ modoAdmin ? 'Acceso administración' : 'Ingresar' }}</h1>
+    <p class="subtitulo mb-4">
+      {{ modoAdmin
+          ? 'Solo cuentas con rol de administrador pueden entrar aquí.'
+          : 'Usa tu DNI y contraseña para comprar tus entradas.' }}
+    </p>
+
+    @if (error()) {
+      <div class="aviso mb-3">{{ error() }}</div>
+    } @else if (sesionExpirada) {
+      <div class="aviso mb-3">
+        Tu sesión expiró. Ingresa de nuevo para continuar donde estabas.
+      </div>
+    }
+
+    <form (ngSubmit)="ingresar()">
+      <label class="form-label">DNI</label>
+      <input class="form-control mb-3" name="dni" [(ngModel)]="dni" required
+             placeholder="Ej: 77889901" autocomplete="username">
+
+      <label class="form-label">Contraseña</label>
+      <input class="form-control mb-4" type="password" name="contrasena" [(ngModel)]="contrasena"
+             required placeholder="••••••" autocomplete="current-password">
+
+      <button class="btn-acento ancho" type="submit" [disabled]="cargando()">
+        @if (cargando()) {
+          <span class="spinner-border spinner-border-sm"></span> Ingresando…
+        } @else {
+          Entrar
+        }
+      </button>
+    </form>
+
+    <p class="tenue chico mt-3">
+      ¿No tienes cuenta? <a routerLink="/cuenta/registro" class="acento">Regístrate aquí</a>
+    </p>
+
+    @if (!modoAdmin) {
+      <div class="demo">
+        <strong>Cuenta de prueba</strong>
+        <span>Cliente: <code>77889901</code> / <code>123456</code></span>
+        <span>La cuenta de administración se configura en el backend.</span>
+      </div>
+    }
+  </div>
+</section>

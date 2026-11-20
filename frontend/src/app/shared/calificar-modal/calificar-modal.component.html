@@ -1,0 +1,43 @@
+<div class="fondo" (click)="cerrar()">
+  <div class="caja" role="dialog" aria-modal="true" aria-label="Calificar película"
+       (click)="$event.stopPropagation()">
+    <button type="button" class="cerrar" (click)="cerrar()" aria-label="Cerrar">
+      <i class="bi bi-x-lg"></i>
+    </button>
+
+    <h2 class="titulo-seccion">Calificar película</h2>
+    @if (titulo) {
+      <p class="tenue chico">{{ titulo }}</p>
+    }
+
+    @if (cargando()) {
+      <div class="cargando">
+        <span class="spinner-border spinner-border-sm"></span> Cargando…
+      </div>
+    } @else {
+      <div class="estrellas">
+        @for (n of [1,2,3,4,5]; track n) {
+          <button type="button" class="estrella" [class.activa]="n <= puntuacion()"
+                  [attr.aria-label]="n + ' de 5'" (click)="puntuacion.set(n)">
+            <i class="bi" [class.bi-star-fill]="n <= puntuacion()" [class.bi-star]="n > puntuacion()"></i>
+          </button>
+        }
+      </div>
+
+      <textarea class="form-control mt-2" rows="3" maxlength="500" name="comentario"
+                [(ngModel)]="comentario" placeholder="Cuéntanos qué te pareció (opcional)"></textarea>
+
+      <div class="acciones">
+        <button type="button" class="btn-fantasma" (click)="cerrar()">Cancelar</button>
+        <button type="button" class="btn-acento"
+                [disabled]="enviando() || puntuacion() === 0" (click)="guardar()">
+          @if (enviando()) {
+            <span class="spinner-border spinner-border-sm"></span> Enviando…
+          } @else {
+            Publicar calificación
+          }
+        </button>
+      </div>
+    }
+  </div>
+</div>

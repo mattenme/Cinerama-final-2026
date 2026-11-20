@@ -1,0 +1,159 @@
+<section class="contenedor admin">
+  <div class="admin-cabecera">
+    <div>
+      <h1 class="titulo-seccion">Administración</h1>
+      <p class="subtitulo">Salas y butacas</p>
+    </div>
+    <button class="btn-acento" type="button" (click)="nueva()">
+      <i class="bi bi-plus-lg"></i> Nueva sala
+    </button>
+  </div>
+
+  <app-admin-nav></app-admin-nav>
+
+  @if (error()) {
+    <div class="aviso">{{ error() }}</div>
+  }
+
+  <div class="panel">
+    <div class="panel-toolbar">
+      <div class="buscador">
+        <i class="bi bi-search"></i>
+        <input type="search" placeholder="Buscar sala o tipo"
+               [value]="busqueda()" (input)="buscar($event)">
+      </div>
+      <span class="tenue chico">{{ visibles().length }} de {{ salas().length }}</span>
+    </div>
+
+    @if (cargando()) {
+      <div class="cargando"><span class="spinner-border spinner-border-sm"></span> Cargando salas…</div>
+    } @else if (visibles().length === 0) {
+      <div class="vacio"><i class="bi bi-door-open"></i>
+        {{ salas().length === 0 ? 'No hay salas registradas.' : 'No se encontraron resultados.' }}
+      </div>
+    } @else {
+      <div class="tabla-scroll">
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>Sala</th>
+              <th>Tipo</th>
+              <th>Capacidad</th>
+              <th>Estado</th>
+              <th class="der">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (s of visibles(); track s.idSala) {
+              <tr>
+                <td><strong>{{ s.nombre }}</strong></td>
+                <td>{{ s.tipo || '—' }}</td>
+                <td>{{ s.capacidadTotal }} butacas</td>
+                <td>
+                  <span class="pildora" [class.ok]="s.activo === 1" [class.no]="s.activo !== 1">
+                    {{ s.activo === 1 ? 'Activa' : 'Inactiva' }}
+                  </span>
+                </td>
+                <td>
+                  <div class="fila-acciones">
+                    <button class="btn-icono" type="button" title="Generar butacas" (click)="abrirButacas(s)">
+                      <i class="bi bi-grid-3x3-gap"></i>
+                    </button>
+                    <button class="btn-icono" type="button" title="Activar/desactivar" (click)="toggleActivo(s)">
+                      <i class="bi" [class.bi-toggle-on]="s.activo === 1" [class.bi-toggle-off]="s.activo !== 1"></i>
+                    </button>
+                    <button class="btn-icono" type="button" title="Editar" (click)="editar(s)">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn-icono peligro" type="button" title="Eliminar" (click)="eliminar(s)">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</section>
+
+@if (mostrarForm()) {
+  <div class="modal-fondo" (click)="cerrar()">
+    <div class="modal-caja" (click)="$event.stopPropagation()">
+      <h3>{{ editando() ? 'Editar sala' : 'Nueva sala' }}</h3>
+
+      <label class="form-label">Nombre *</label>
+      <input class="form-control mb-3" name="nombre" [(ngModel)]="modelo.nombre" maxlength="100">
+
+      <div class="grid-2">
+        <div>
+          <label class="form-label">Tipo</label>
+          <input class="form-control mb-3" name="tipo" [(ngModel)]="modelo.tipo" maxlength="50">
+        </div>
+        <div>
+          <label class="form-label">Capacidad</label>
+          <input class="form-control mb-3" type="number" min="0" name="capacidad"
+                 [(ngModel)]="modelo.capacidadTotal">
+        </div>
+      </div>
+
+      <div class="checks">
+        <label>
+          <input type="checkbox" [ngModel]="modelo.activo === 1"
+                 (ngModelChange)="modelo.activo = $event ? 1 : 0" name="activo">
+          Activa
+        </label>
+      </div>
+
+      <div class="modal-pie">
+        <button class="btn-fantasma" type="button" (click)="cerrar()">Cancelar</button>
+        <button class="btn-acento" type="button" [disabled]="guardando()" (click)="guardar()">
+          @if (guardando()) {
+            <span class="spinner-border spinner-border-sm"></span> Guardando…
+          } @else {
+            Guardar
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (salaButacas(); as sala) {
+  <div class="modal-fondo" (click)="cerrarButacas()">
+    <div class="modal-caja" (click)="$event.stopPropagation()">
+      <h3>Generar butacas</h3>
+      <p class="tenue chico">
+        Sala <strong>{{ sala.nombre }}</strong>. Solo funciona si la sala todavía no tiene butacas.
+      </p>
+
+      <div class="grid-2">
+        <div>
+          <label class="form-label">Filas *</label>
+          <input class="form-control mb-3" type="number" min="1" max="26" name="filas"
+                 [(ngModel)]="butacasFilas">
+        </div>
+        <div>
+          <label class="form-label">Butacas por fila *</label>
+          <input class="form-control mb-3" type="number" min="1" max="30" name="porFila"
+                 [(ngModel)]="butacasPorFila">
+        </div>
+      </div>
+
+      <p class="tenue chico">Se crearán {{ butacasFilas * butacasPorFila }} butacas.</p>
+
+      <div class="modal-pie">
+        <button class="btn-fantasma" type="button" (click)="cerrarButacas()">Cancelar</button>
+        <button class="btn-acento" type="button" [disabled]="generando()" (click)="generarButacas()">
+          @if (generando()) {
+            <span class="spinner-border spinner-border-sm"></span> Generando…
+          } @else {
+            Generar
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,46 @@
+<header class="barra">
+  <div class="contenedor barra-interior">
+    <a #marca class="marca" routerLink="/home" (click)="irInicio()">
+      <span data-label="CINERAMA">CINERAMA</span>
+    </a>
+
+    <button class="hamburguesa" type="button" (click)="alternarMenu()" aria-label="Menú">
+      <i class="bi bi-list"></i>
+    </button>
+
+    <nav #navegacion class="navegacion" [class.abierta]="menuAbierto()">
+      <a routerLink="/cartelera" routerLinkActive="activo" (click)="seleccionarEnlace($event); cerrarMenu()">Cartelera</a>
+      <a routerLink="/dulceria" routerLinkActive="activo" (click)="seleccionarEnlace($event); cerrarMenu()">Dulcería</a>
+      @if (auth.estaLogueado()) {
+        <a routerLink="/mis-compras" routerLinkActive="activo" (click)="seleccionarEnlace($event); cerrarMenu()">Mis compras</a>
+        <a routerLink="/soporte" routerLinkActive="activo" (click)="seleccionarEnlace($event); cerrarMenu()">Soporte</a>
+      }
+      @if (auth.esEmpleado()) {
+        <a routerLink="/puerta" routerLinkActive="activo" (click)="seleccionarEnlace($event); cerrarMenu()">
+          <i class="bi bi-door-open"></i> Puerta
+        </a>
+      }
+      @if (auth.esAdmin()) {
+        <a routerLink="/admin/peliculas" routerLinkActive="activo" (click)="seleccionarEnlace($event); cerrarMenu()">
+          <i class="bi bi-sliders"></i> Administración
+        </a>
+      }
+    </nav>
+
+    <div class="acciones">
+      @if (auth.estaLogueado()) {
+        <div class="usuario">
+          <div class="usuario-datos">
+            <span class="hola">Hola,</span>
+            <strong>{{ auth.usuario()?.nombre }}</strong>
+          </div>
+          <button class="btn-fantasma chico" type="button" (click)="salir()">
+            <i class="bi bi-box-arrow-right"></i> Salir
+          </button>
+        </div>
+      } @else {
+        <a class="btn-acento chico" routerLink="/cuenta/login" (click)="cerrarMenu()">Ingresar</a>
+      }
+    </div>
+  </div>
+</header>

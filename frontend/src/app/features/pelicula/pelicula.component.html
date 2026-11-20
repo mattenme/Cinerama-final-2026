@@ -1,0 +1,336 @@
+@if (cargando()) {
+  <div class="contenedor seccion">
+    <div class="cargando"><span class="spinner-border spinner-border-sm"></span> Cargando película…</div>
+  </div>
+} @else if (error()) {
+  <div class="contenedor seccion">
+    <div class="aviso">{{ error() }} <a routerLink="/cartelera" class="acento">Volver a la cartelera</a></div>
+  </div>
+} @else {
+  @if (pelicula(); as p) {
+  <section class="contenedor seccion">
+    <a class="volver" routerLink="/cartelera"><i class="bi bi-arrow-left"></i> Cartelera</a>
+
+    <div class="ficha">
+      <div class="ficha-poster">
+        <div class="poster">
+          <div class="respaldo">
+            <i class="bi bi-camera-reels"></i>
+            <span>{{ p.titulo }}</span>
+          </div>
+          @if (imagen()) {
+            <img [src]="imagen()!" [alt]="p.titulo" (error)="ocultar($event)">
+          }
+        </div>
+      </div>
+
+      <div class="ficha-datos">
+        <span class="etiqueta"><i class="bi bi-ticket-perforated"></i> Entradas</span>
+        <h1>{{ p.titulo }}</h1>
+        <div class="meta">
+          @if (p.genero) { <span class="pildora neutra">{{ p.genero }}</span> }
+          <span class="pildora neutra"><i class="bi bi-clock"></i> {{ p.duracionMinutos }} min</span>
+          <span class="pildora acento">Butaca {{ soles(precio()) }}</span>
+        </div>
+        <p class="sinopsis">
+          {{ p.sinopsis || 'Sin sinopsis registrada para esta película.' }}
+        </p>
+
+        <div class="valoracion">
+          @for (n of [1,2,3,4,5]; track n) {
+            <i class="bi" [class.bi-star-fill]="n <= promedio()" [class.bi-star]="n > promedio()"></i>
+          }
+          <span class="tenue chico">
+            {{ textoPromedio() }}/5 · {{ totalCalificaciones() }} calificación(es)
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="reserva">
+      <div class="reserva-izquierda">
+        <h2 class="titulo-seccion">Elige tu función</h2>
+
+        @if (totalFunciones() === 0) {
+          <div class="vacio">
+            <i class="bi bi-calendar-x"></i>
+            No hay funciones programadas para esta película.
+            <div class="tenue mt-2">Agrégalas desde Administración → Funciones.</div>
+          </div>
+        } @else {
+          <div class="dias-tabs">
+            @for (dia of dias(); track dia.fecha; let i = $index) {
+              <button
+                type="button"
+                class="dia-tab"
+                [class.activa]="diaSeleccionado() === i"
+                (click)="elegirDia(i)">
+                {{ dia.fecha }}
+                <span>{{ dia.funciones.length }} funciones</span>
+              </button>
+            }
+          </div>
+
+          @if (diaActual(); as dia) {
+            <div class="horas">
+              @for (f of dia.funciones; track f.idFuncion) {
+                <button
+                  type="button"
+                  class="hora"
+                  [class.activa]="funcionSeleccionada()?.idFuncion === f.idFuncion"
+                  (click)="elegirFuncion(f)">
+                  <strong>{{ hora(f.horaInicio) }}</strong>
+                  <span>{{ f.nombreSala }}</span>
+                </button>
+              }
+            </div>
+          }
+        }
+
+        @if (funcionSeleccionada(); as f) {
+          <div class="sala">
+            <div class="pantalla">PANTALLA</div>
+
+            @if (cargandoSalas()) {
+              <div class="cargando"><span class="spinner-border spinner-border-sm"></span> Cargando butacas…</div>
+            } @else if (filas().length === 0) {
+              <div class="aviso info">
+                La sala <strong>{{ f.nombreSala }}</strong> todavía no tiene butacas registradas.
+              </div>
+            } @else {
+              @if (carrito.asientos().length > 0) {
+                <div class="temporizador" [class.urgente]="carrito.restante() <= 60">
+                  <i class="bi bi-stopwatch"></i>
+                  Tus butacas se liberan en <strong>{{ carrito.reservaTexto() }}</strong>.
+                  Si sales, no se guardan.
+                </div>
+              }
+
+              <div class="butacas">
+                @for (fila of filas(); track fila.fila) {
+                  <div class="fila">
+                    <span class="letra">{{ fila.fila }}</span>
+                    @for (b of fila.butacas; track b.idAsiento) {
+                      <button
+                        type="button"
+                        class="butaca"
+                        [class.elegida]="butacaSeleccionada(b)"
+                        [class.ocupada]="butacaOcupada(b)"
+                        [class.bloqueada]="butacaBloqueada(b)"
+                        [disabled]="noDisponible(b)"
+                        [title]="fila.fila + b.numero + (butacaOcupada(b) ? ' (ocupada)' : '')"
+                        (click)="elegirButaca(b)">
+                        {{ b.numero }}
+                      </button>
+                    }
+                  </div>
+                }
+
+              </div>
+
+              <div class="leyenda">
+                <span><i class="muestra libre"></i> Libre</span>
+                <span><i class="muestra elegida"></i> Seleccionada</span>
+                <span><i class="muestra ocupada"></i> Ocupada</span>
+              </div>
+            }
+          </div>
+        }
+
+        <section class="dulceria-reserva" aria-label="Productos de dulcería">
+              <div class="dulceria-cabecera">
+                <div>
+                  <h2 class="titulo-seccion"><i class="bi bi-cup-straw"></i> Dulcería</h2>
+                  <p class="subtitulo">Agrega algo rico para disfrutar durante la función</p>
+                </div>
+                @if (carrito.totalDulceria() > 0) {
+                  <strong class="dulceria-total">{{ soles(carrito.totalDulceria()) }}</strong>
+                }
+              </div>
+
+              @if (categoriasDulceria().length > 0) {
+                <div class="dulceria-filtros" aria-label="Filtrar productos por categoría">
+                  <button type="button" class="chip" [class.activo]="categoriaDulceria() === 'TODOS'"
+                          (click)="categoriaDulceria.set('TODOS')">Todo</button>
+                  @for (categoria of categoriasDulceria(); track categoria) {
+                    <button type="button" class="chip" [class.activo]="categoriaDulceria() === categoria"
+                            (click)="categoriaDulceria.set(categoria)">{{ categoria }}</button>
+                  }
+                </div>
+              }
+
+              @if (cargandoDulceria()) {
+                <div class="cargando"><span class="spinner-border spinner-border-sm"></span> Cargando productos…</div>
+              } @else if (errorDulceria()) {
+                <div class="aviso">No se pudo cargar la dulcería.</div>
+              } @else if (productosDulceria().length === 0) {
+                <p class="tenue chico">Aún no hay productos disponibles.</p>
+              } @else {
+                <div class="dulceria-carrusel">
+                  @for (producto of productosDulceriaFiltrados(); track producto.idProducto) {
+                    <article class="dulceria-producto">
+                      <div class="dulceria-foto">
+                        <div class="respaldo"><i class="bi bi-bag-heart"></i></div>
+                        @if (imagenProducto(producto)) {
+                          <img loading="lazy" decoding="async" [src]="imagenProducto(producto)!"
+                               [alt]="producto.nombre" (error)="ocultar($event)">
+                        }
+                        @if (producto.categoria) {
+                          <span class="dulceria-etiqueta">{{ producto.categoria }}</span>
+                        }
+                      </div>
+                      <div class="dulceria-detalle">
+                        <strong>{{ producto.nombre }}</strong>
+                        <div class="dulceria-compra">
+                          <span class="acento">{{ soles(producto.precio) }}</span>
+                          @if (productoAgotado(producto)) {
+                            <span class="tenue chico">Agotado</span>
+                          } @else if (carrito.cantidadProducto(producto.idProducto!) > 0) {
+                            <div class="dulceria-contador">
+                              <button class="btn-mini" type="button" aria-label="Quitar uno"
+                                      (click)="carrito.quitarProducto(producto.idProducto!)">
+                                <i class="bi bi-dash"></i>
+                              </button>
+                              <span>{{ carrito.cantidadProducto(producto.idProducto!) }}</span>
+                              <button class="btn-mini" type="button" aria-label="Agregar uno más"
+                                      [disabled]="!productoSePuedeAgregar(producto)"
+                                      (click)="carrito.agregarProducto(producto)">
+                                <i class="bi bi-plus"></i>
+                              </button>
+                            </div>
+                          } @else {
+                            <button class="btn-acento dulceria-agregar" type="button"
+                                    [disabled]="!productoSePuedeAgregar(producto)"
+                                    (click)="carrito.agregarProducto(producto)">
+                              <i class="bi bi-plus-lg"></i> Agregar
+                            </button>
+                          }
+                        </div>
+                      </div>
+                    </article>
+                  } @empty {
+                    <p class="tenue chico">No hay productos en esta categoría.</p>
+                  }
+                </div>
+              }
+        </section>
+      </div>
+
+      <aside class="resumen">
+        <div class="panel">
+          <h3 class="titulo-seccion">Tu selección</h3>
+
+          @if (!funcionSeleccionada()) {
+            <p class="tenue">Selecciona una función para elegir tus butacas.</p>
+          } @else {
+            <div class="resumen-fila">
+              <span class="tenue">Función</span>
+              <strong>{{ hora(funcionSeleccionada()!.horaInicio) }}</strong>
+            </div>
+            <div class="resumen-fila">
+              <span class="tenue">Sala</span>
+              <strong>{{ funcionSeleccionada()!.nombreSala }}</strong>
+            </div>
+            <div class="resumen-fila">
+              <span class="tenue">Butacas</span>
+              <strong>{{ carrito.asientos().length }}</strong>
+            </div>
+
+            @if (carrito.asientos().length > 0) {
+              <div class="lista-butacas">
+                @for (b of carrito.asientos(); track b.idAsiento) {
+                  <span class="butaca-chip">
+                    {{ b.fila }}{{ b.numero }}
+                    <button type="button" (click)="carrito.quitarButaca(b.idAsiento)" title="Quitar">
+                      <i class="bi bi-x"></i>
+                    </button>
+                  </span>
+                }
+              </div>
+            } @else {
+              <p class="tenue chico">Toca las butacas que quieras comprar.</p>
+            }
+
+          }
+        </div>
+
+        @if (carrito.asientos().length > 0) {
+          <app-checkout />
+        }
+      </aside>
+    </div>
+
+    @if (puedeCalificar() || comentarios().length > 0) {
+      <div class="panel calificar">
+        <div class="calificar-cabecera">
+          <div>
+            <h2 class="titulo-seccion">Calificaciones</h2>
+            <p class="subtitulo">Lo que opina el público de esta película</p>
+          </div>
+          <div class="promedio-caja">
+            <strong>{{ textoPromedio() }}</strong>
+            <div class="estrellas-mini">
+              @for (n of [1,2,3,4,5]; track n) {
+                <i class="bi" [class.bi-star-fill]="n <= promedio()" [class.bi-star]="n > promedio()"></i>
+              }
+            </div>
+            <span class="tenue chico">{{ totalCalificaciones() }} calificación(es)</span>
+          </div>
+        </div>
+
+        <div class="calificar-cuerpo" [class.solo-comentarios]="!puedeCalificar()">
+          @if (puedeCalificar()) {
+            <div class="mi-calificacion">
+              <h3>Tu calificación</h3>
+              <p class="tenue chico">
+                {{ miCalificacion() ? 'Puedes cambiarla cuando quieras.' : 'Marca de 1 a 5 estrellas.' }}
+              </p>
+              <div class="selector">
+                @for (n of [1,2,3,4,5]; track n) {
+                  <button type="button" class="estrella" [class.activa]="n <= puntuacion()"
+                          [title]="n + ' de 5'" (click)="puntuacion.set(n)">
+                    <i class="bi" [class.bi-star-fill]="n <= puntuacion()" [class.bi-star]="n > puntuacion()"></i>
+                  </button>
+                }
+              </div>
+              <textarea class="form-control" rows="2" maxlength="500" name="comentario"
+                        [(ngModel)]="comentario" placeholder="Cuéntanos qué te pareció (opcional)"></textarea>
+              <button class="btn-acento ancho mt-3" type="button"
+                      [disabled]="enviandoCalificacion() || puntuacion() === 0" (click)="calificar()">
+                @if (enviandoCalificacion()) {
+                  <span class="spinner-border spinner-border-sm"></span> Enviando…
+                } @else {
+                  Publicar calificación
+                }
+              </button>
+            </div>
+          }
+
+          <div class="comentarios-lista">
+            @if (comentarios().length > 0) {
+              @for (c of comentarios(); track c.idCliente) {
+                <article class="comentario">
+                  <div class="comentario-cabecera">
+                    <div class="estrellas-mini">
+                      @for (n of [1,2,3,4,5]; track n) {
+                        <i class="bi" [class.bi-star-fill]="n <= c.puntuacion" [class.bi-star]="n > c.puntuacion"></i>
+                      }
+                    </div>
+                    <span class="tenue chico">{{ c.nombreCliente || 'Cliente' }}</span>
+                  </div>
+                  <p>{{ c.comentario }}</p>
+                </article>
+              }
+            } @else {
+              <div class="vacio chico">
+                <i class="bi bi-chat-square-text"></i>
+                Todavía no hay comentarios de esta película.
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    }
+  </section>
+  }
+}

@@ -1,0 +1,281 @@
+<section class="contenedor admin">
+  <div class="admin-cabecera">
+    <div>
+      <h1 class="titulo-seccion">Administración</h1>
+      <p class="subtitulo">Ventas, ocupación y reportes calculados con procedimientos en Oracle</p>
+    </div>
+    <button class="btn-fantasma" type="button" (click)="cargar()">
+      <i class="bi bi-arrow-clockwise"></i> Actualizar
+    </button>
+  </div>
+
+  <app-admin-nav></app-admin-nav>
+
+  <div class="panel">
+    <div class="panel-cabecera">
+      <h2>Ventas por película</h2>
+      <button class="btn-fantasma chico" type="button" (click)="descargarVentas()">
+        <i class="bi bi-download"></i> Exportar CSV
+      </button>
+    </div>
+
+    @if (ventas().length === 0) {
+      <div class="vacio chico"><i class="bi bi-bar-chart"></i> Todavía no hay ventas registradas.</div>
+    } @else {
+      <div class="grafico">
+        @for (v of ventas(); track v.idPelicula) {
+          <div class="barra-fila">
+            <span class="barra-etiqueta" [title]="v.titulo">{{ v.titulo }}</span>
+            <div class="barra-pista">
+              <div class="barra-relleno" [style.width.%]="anchoVenta(v)"></div>
+            </div>
+            <strong class="barra-valor">{{ soles(v.total) }}</strong>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <div class="panel">
+    <div class="panel-cabecera">
+      <h2>Ocupación por función</h2>
+      <button class="btn-fantasma chico" type="button" (click)="descargarOcupacion()">
+        <i class="bi bi-download"></i> Exportar CSV
+      </button>
+    </div>
+
+    @if (ocupacion().length === 0) {
+      <div class="vacio chico"><i class="bi bi-bar-chart"></i> Sin funciones con datos de ocupación.</div>
+    } @else {
+      <div class="grafico">
+        @for (o of ocupacion(); track o.idFuncion) {
+          <div class="barra-fila">
+            <span class="barra-etiqueta" [title]="o.titulo + ' · ' + o.sala">{{ o.titulo }} · {{ o.sala }}</span>
+            <div class="barra-pista">
+              <div class="barra-relleno" [style.width.%]="anchoOcupacion(o)"></div>
+            </div>
+            <strong class="barra-valor">{{ porcentaje(o) }}%</strong>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  @if (error()) {
+    <div class="aviso">{{ error() }}</div>
+  }
+
+  <div class="panel">
+    <div class="panel-cabecera">
+      <h2>Resumen por función</h2>
+      <span class="tenue chico">SP_RESUMEN_FUNCION</span>
+    </div>
+
+    @if (resumen(); as r) {
+      <p class="tenue chico">{{ resumenTitulo() }}</p>
+      <div class="rejilla">
+        <div class="dato"><span class="tenue chico">Butacas vendidas</span><strong>{{ r.butacas }}</strong></div>
+        <div class="dato"><span class="tenue chico">Entradas</span><strong>{{ soles(r.ingresosEntradas) }}</strong></div>
+        <div class="dato"><span class="tenue chico">Dulcería</span><strong>{{ soles(r.ingresosDulceria) }}</strong></div>
+        <div class="dato"><span class="tenue chico">Total</span><strong class="total">{{ soles(r.total) }}</strong></div>
+      </div>
+    } @else {
+      <div class="vacio chico">
+        <i class="bi bi-database"></i>
+        Pulsa «Resumen» en una función de la tabla de ocupación para ejecutar el procedimiento.
+      </div>
+    }
+  </div>
+
+  <div class="panel">
+    <div class="panel-cabecera">
+      <h2>Comparación del periodo</h2>
+      <span class="tenue chico">SP_COMPARACION_PERIODOS · últimos {{ dias() }} días vs. los {{ dias() }} anteriores</span>
+    </div>
+
+    <div class="filtros">
+      <span class="tenue chico etiqueta">Periodo</span>
+      @for (d of [7, 30, 90]; track d) {
+        <button class="chip" type="button" [class.activo]="dias() === d" (click)="cambiarDias(d)">
+          {{ d }} días
+        </button>
+      }
+    </div>
+
+    @if (comparacion().length === 0) {
+      <div class="vacio"><i class="bi bi-inbox"></i> No hay compras en el periodo comparado.</div>
+    } @else {
+      <div class="tabla-scroll">
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>Métrica</th>
+              <th class="der">Periodo actual</th>
+              <th class="der">Periodo anterior</th>
+              <th class="der">Variación</th>
+              <th class="der">%</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (fila of comparacion(); track fila.metrica) {
+              <tr>
+                <td><strong>{{ nombreMetrica(fila.metrica) }}</strong></td>
+                <td class="der">{{ valor(fila.metrica, fila.actual) }}</td>
+                <td class="der tenue">{{ valor(fila.metrica, fila.anterior) }}</td>
+                <td class="der">{{ valor(fila.metrica, fila.variacion) }}</td>
+                <td class="der">
+                  <span class="variacion" [class]="claseVariacion(fila)">{{ variacion(fila) }}</span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+
+  <div class="panel">
+    <div class="panel-cabecera">
+      <h2>Clientes que más compran</h2>
+      <span class="tenue chico">SP_TOP_CLIENTES · comparado con el cliente promedio</span>
+    </div>
+
+    <div class="filtros">
+      <span class="tenue chico etiqueta">Mostrar</span>
+      @for (n of [5, 10, 20]; track n) {
+        <button class="chip" type="button" [class.activo]="limite() === n" (click)="cambiarLimite(n)">
+          Top {{ n }}
+        </button>
+      }
+    </div>
+
+    @if (topClientes().length === 0) {
+      <div class="vacio"><i class="bi bi-inbox"></i> Todavía no hay compras registradas.</div>
+    } @else {
+      <div class="tabla-scroll">
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Cliente</th>
+              <th class="der">Compras</th>
+              <th class="der">Butacas</th>
+              <th class="der">Entradas</th>
+              <th class="der">Dulcería</th>
+              <th class="der">Total</th>
+              <th class="der">Ticket prom.</th>
+              <th class="der">vs. promedio</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of topClientes(); track c.dni) {
+              <tr>
+                <td class="tenue">{{ c.posicion }}</td>
+                <td>
+                  <strong>{{ c.nombre }}</strong>
+                  <div class="tenue chico">{{ c.dni }}</div>
+                </td>
+                <td class="der">{{ c.compras }}</td>
+                <td class="der">{{ c.butacas }}</td>
+                <td class="der">{{ soles(c.entradas) }}</td>
+                <td class="der">{{ soles(c.dulceria) }}</td>
+                <td class="der"><strong>{{ soles(c.total) }}</strong></td>
+                <td class="der">{{ soles(c.ticketPromedio) }}</td>
+                <td class="der">
+                  <span class="variacion" [class]="c.vsPromedioPct >= 0 ? 'sube' : 'baja'">
+                    {{ c.vsPromedioPct > 0 ? '+' : '' }}{{ c.vsPromedioPct }}%
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+
+  <div class="panel">
+    <div class="panel-cabecera">
+      <h2>Ventas por película</h2>
+      <span class="tenue chico">SP_VENTAS_POR_PELICULA</span>
+    </div>
+
+    @if (cargando()) {
+      <div class="cargando"><span class="spinner-border spinner-border-sm"></span> Cargando reportes…</div>
+    } @else if (ventas().length === 0) {
+      <div class="vacio"><i class="bi bi-inbox"></i> Todavía no hay ventas registradas.</div>
+    } @else {
+      <div class="tabla-scroll">
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>Película</th>
+              <th class="der">Compras</th>
+              <th class="der">Butacas</th>
+              <th class="der">Entradas</th>
+              <th class="der">Dulcería</th>
+              <th class="der">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (v of ventas(); track v.idPelicula) {
+              <tr>
+                <td><strong>{{ v.titulo }}</strong></td>
+                <td class="der">{{ v.compras }}</td>
+                <td class="der">{{ v.butacas }}</td>
+                <td class="der">{{ soles(v.entradas) }}</td>
+                <td class="der">{{ soles(v.dulceria) }}</td>
+                <td class="der"><strong>{{ soles(v.total) }}</strong></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+
+  <div class="panel">
+    <div class="panel-cabecera">
+      <h2>Ocupación por función</h2>
+      <span class="tenue chico">SP_OCUPACION_POR_FUNCION</span>
+    </div>
+
+    @if (ocupacion().length === 0) {
+      <div class="vacio"><i class="bi bi-inbox"></i> No hay funciones programadas.</div>
+    } @else {
+      <div class="tabla-scroll">
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>Película</th>
+              <th>Sala</th>
+              <th>Función</th>
+              <th class="der">Vendidas</th>
+              <th class="ancho">Ocupación</th>
+              <th class="der">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (f of ocupacion(); track f.idFuncion) {
+              <tr>
+                <td><strong>{{ f.titulo }}</strong></td>
+                <td>{{ f.sala }}</td>
+                <td>{{ fecha(f.horaInicio) }}</td>
+                <td class="der">{{ f.vendidas }} / {{ f.capacidad }}</td>
+                <td>
+                  <div class="barra"><span [style.width.%]="porcentaje(f)"></span></div>
+                  <span class="tenue chico">{{ porcentaje(f) }}%</span>
+                </td>
+                <td class="der">
+                  <button class="btn-fantasma chico" type="button" (click)="verResumen(f)">
+                    <i class="bi bi-database"></i> Resumen
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</section>

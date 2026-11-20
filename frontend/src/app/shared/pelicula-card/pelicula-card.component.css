@@ -1,0 +1,34 @@
+.tarjeta {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  color: var(--texto);
+  background: var(--surface);
+  border: 1px solid var(--linea);
+  border-radius: 6px;
+  overflow: hidden;
+  transition: border-color .2s ease;
+}
+.tarjeta:hover {
+  border-color: rgba(214, 40, 40, .55);
+}
+.tarjeta .poster { border: 0; border-radius: 0; transition: none; }
+.tarjeta:hover .ver { color: var(--acento); }
+.cinta {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: var(--acento);
+  color: #fff;
+  font-size: .66rem;
+  font-weight: 800;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  padding: 3px 9px;
+  border-radius: 3px;
+  z-index: 2;
+}
+.datos { padding: 14px 14px 16px; }
+h3 { font-size: .98rem; margin: 0 0 6px; font-weight: 600; line-height: 1.25; }
+.meta { display: flex; flex-wrap: wrap; gap: 10px; color: var(--muted); font-size: .78rem; margin: 0 0 10px; }
+.ver { font-size: .78rem; font-weight: 600; color: var(--muted); letter-spacing: 0; }

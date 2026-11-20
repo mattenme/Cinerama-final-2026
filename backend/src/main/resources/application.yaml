@@ -1,0 +1,99 @@
+spring:
+
+  config:
+    import:
+      - optional:file:./.env[.properties]
+      - optional:file:./backend/.env[.properties]
+
+  datasource:
+    url: jdbc:oracle:thin:@localhost:1521:XE
+    username: cineramaBD
+    password: 123
+    driver-class-name: oracle.jdbc.OracleDriver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        use_sql_comments: false
+    open-in-view: false
+
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+      file-size-threshold: 2MB
+
+
+  jackson:
+    serialization:
+      indent-output: true
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+
+server:
+  port: 8082
+  error:
+    include-message: always
+    include-exception: false
+    include-stacktrace: never
+  servlet:
+    context-path: /cinerama
+
+logging:
+  level:
+    pe.edu.upeu.cinerama: INFO
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+
+cinerama:
+  cors:
+    # Orígenes permitidos para el frontend, separados por coma.
+    # En producción: CINERAMA_CORS_ALLOWED_ORIGINS=https://midominio.com
+    allowed-origins: ${CINERAMA_CORS_ALLOWED_ORIGINS:http://localhost:4200}
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    from: ${MAIL_FROM:}
+    debug: ${MAIL_DEBUG:false}
+    # Si el SMTP falla, devuelve el código de verificación en la respuesta.
+    # Desactivado por defecto: solo se habilita a propósito en local.
+    expose-dev-code: ${MAIL_EXPOSE_DEV_CODE:false}
+  compras:
+    # Minutos que una compra PENDIENTE conserva sus butacas antes de liberarlas.
+    reserva-minutos: ${CINERAMA_RESERVA_MINUTOS:15}
+    # Cada cuánto corre la limpieza de reservas vencidas.
+    limpieza-ms: ${CINERAMA_LIMPIEZA_MS:60000}
+    limpieza-inicial-ms: ${CINERAMA_LIMPIEZA_INICIAL_MS:30000}
+  seed:
+    # Crea datos de demostración (salas, butacas, dulcería, promociones y
+    # funciones) solo en las tablas que estén vacías, y garantiza la cuenta ADMIN.
+    demo-data: ${CINERAMA_SEED:true}
+    admin-dni: ${CINERAMA_ADMIN_DNI:00000001}
+    admin-password: ${CINERAMA_ADMIN_PASSWORD:admin123}
+    # Recuperación: arrancar una vez con CINERAMA_ADMIN_RESET=true restaura la
+    # contraseña del admin, la desbloquea y lo marca como verificado.
+    admin-reset-password: ${CINERAMA_ADMIN_RESET:false}
+  upload:
+    dir: uploads
+
+security:
+  jwt:
+    # Base64 de 48 bytes aleatorios (misma forma que el proyecto de referencia).
+    # En producción se sobreescribe con SECURITY_JWT_SECRET_KEY.
+    secret-key: ${SECURITY_JWT_SECRET_KEY:Ma7LaOl0rgVBu31oPlD6W5Orhn6GpelBt3awSMfen0ko+WZSzlgMIS1MOuqPJNdV}
+    # Vida del token: 8 horas (28 800 000 ms). En la interfaz no se muestra
+    # cuenta atrás; la sesión se cierra por inactividad y vuelve al inicio.
+    expiration-time: 28800000

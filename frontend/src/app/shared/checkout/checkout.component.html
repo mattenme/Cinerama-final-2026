@@ -1,0 +1,187 @@
+<div class="panel checkout">
+  <h3 class="titulo-seccion">Pago</h3>
+
+  @if (carrito.asientos().length > 0) {
+    <p class="reserva-tiempo" [class.urgente]="carrito.restante() <= 60">
+      <i class="bi bi-stopwatch"></i>
+      Tus butacas se liberan en <strong>{{ carrito.reservaTexto() }}</strong>
+    </p>
+  }
+
+  <div class="linea">
+    <span>Butacas ({{ carrito.asientos().length }} × {{ soles(carrito.precioPorButaca()) }})</span>
+    <strong>{{ soles(carrito.totalButacas()) }}</strong>
+  </div>
+  <div class="linea">
+    <span>Dulcería</span>
+    <strong>{{ soles(carrito.totalDulceria()) }}</strong>
+  </div>
+
+  @if (descuento() > 0) {
+    <div class="linea descuento">
+      <span>Descuento {{ promocion()?.codigo }}</span>
+      <strong>- {{ soles(descuento()) }}</strong>
+    </div>
+  }
+
+  <div class="promo">
+    <label class="form-label">Código de promoción</label>
+    <div class="promo-fila">
+      <input
+        class="form-control"
+        type="text"
+        placeholder="Ej: PROMO10"
+        [value]="codigo()"
+        (input)="codigo.set($any($event.target).value)">
+      @if (promocion()) {
+        <button class="btn-fantasma" type="button" (click)="quitarPromocion()">Quitar</button>
+      } @else {
+        <button class="btn-fantasma" type="button" [disabled]="buscandoPromo()" (click)="aplicarPromocion()">
+          Aplicar
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="linea total">
+    <span>Total a pagar</span>
+    <strong>{{ soles(totalPagar()) }}</strong>
+  </div>
+
+  <label class="form-label mt-2">Método de pago</label>
+  <div class="metodos">
+    @for (m of metodos; track m.valor) {
+      <button
+        type="button"
+        class="metodo"
+        [class.activo]="metodoPago() === m.valor"
+        (click)="elegirMetodo(m.valor)">
+        <i class="bi {{ m.icono }}"></i>
+        <span>{{ m.texto }}</span>
+      </button>
+    }
+  </div>
+
+  <div class="pago-campos">
+    @if (metodoPago() === 'TARJETA') {
+      <div>
+        <label class="form-label" for="nroTarjeta">Número de tarjeta</label>
+        <input
+          id="nroTarjeta"
+          class="form-control"
+          type="text"
+          inputmode="numeric"
+          autocomplete="cc-number"
+          placeholder="0000 0000 0000 0000"
+          [value]="numeroTarjeta()"
+          (input)="teclearTarjeta($any($event.target).value)">
+      </div>
+      <div>
+        <label class="form-label" for="titularTarjeta">Titular</label>
+        <input
+          id="titularTarjeta"
+          class="form-control"
+          type="text"
+          placeholder="Como figura en la tarjeta"
+          [value]="titularTarjeta()"
+          (input)="titularTarjeta.set($any($event.target).value.toUpperCase())">
+      </div>
+      <div class="campo-doble">
+        <div>
+          <label class="form-label" for="venceTarjeta">Vencimiento</label>
+          <input
+            id="venceTarjeta"
+            class="form-control"
+            type="text"
+            inputmode="numeric"
+            autocomplete="cc-exp"
+            placeholder="MM/AA"
+            [value]="venceTarjeta()"
+            (input)="teclearVencimiento($any($event.target).value)">
+        </div>
+        <div>
+          <label class="form-label" for="cvvTarjeta">CVV</label>
+          <input
+            id="cvvTarjeta"
+            class="form-control"
+            type="password"
+            inputmode="numeric"
+            autocomplete="cc-csc"
+            placeholder="123"
+            [value]="cvvTarjeta()"
+            (input)="teclearCvv($any($event.target).value)">
+        </div>
+      </div>
+      <p class="demo-pago">
+        <i class="bi bi-info-circle"></i> Datos de demostración precargados: edítalos si quieres.
+        El cobro es simulado.
+      </p>
+    } @else if (metodoPago() === 'YAPE' || metodoPago() === 'PLIN') {
+      <div>
+        <label class="form-label" for="celularBilletera">
+          Celular de {{ metodoPago() === 'YAPE' ? 'Yape' : 'Plin' }}
+        </label>
+        <input
+          id="celularBilletera"
+          class="form-control"
+          type="text"
+          inputmode="numeric"
+          placeholder="999 999 999"
+          [value]="celularBilletera()"
+          (input)="teclearCelular($any($event.target).value)">
+      </div>
+      <div>
+        <label class="form-label" for="codigoBilletera">Código de aprobación</label>
+        <input
+          id="codigoBilletera"
+          class="form-control"
+          type="password"
+          inputmode="numeric"
+          placeholder="6 dígitos"
+          [value]="codigoBilletera()"
+          (input)="teclearCodigo($any($event.target).value)">
+      </div>
+      <p class="demo-pago">
+        <i class="bi bi-info-circle"></i> Datos de demostración: el código de aprobación es 123456 y no se
+        contacta a ninguna app real.
+      </p>
+    } @else {
+      <p class="nota-pago">
+        <i class="bi bi-shop"></i> Reserva ahora y paga en efectivo en taquilla al mostrar tu DNI.
+        El QR se emite igual y lo presentas en la puerta.
+      </p>
+    }
+  </div>
+
+  <div class="linea">
+    <span>Pagas con</span>
+    <strong>{{ etiquetaPago() }}</strong>
+  </div>
+
+  @if (!auth.estaLogueado()) {
+    <div class="aviso info">
+      Necesitas iniciar sesión para pagar.
+      <a class="acento" [routerLink]="['/cuenta/login']" [queryParams]="{ returnUrl: returnUrl }">Ingresar</a>
+    </div>
+  }
+
+  @if (errorPago()) {
+    <p class="error-pago">{{ errorPago() }}</p>
+  }
+
+  @if (mensajeError()) {
+    <div class="aviso mt-3">{{ mensajeError() }}</div>
+  }
+
+  <button class="btn-acento ancho mt-3" type="button" [disabled]="enviando() || !carrito.tieneButacas()" (click)="pagar()">
+    @if (enviando()) {
+      <span class="spinner-border spinner-border-sm"></span> Procesando…
+    } @else {
+      <i class="bi bi-shield-check"></i> Pagar {{ soles(totalPagar()) }}
+    }
+  </button>
+
+  <p class="seguro tenue chico">
+    <i class="bi bi-lock"></i> Compra segura. Recibirás tu entrada con código QR.
+  </p>
+</div>

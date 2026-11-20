@@ -1,0 +1,4 @@
+.formulario { max-width: 620px; }
+.lista { display: grid; gap: 12px; margin-top: 12px; }
+.incidencia .cabecera { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.incidencia p { margin: 8px 0; color: var(--texto); font-size: .92rem; }

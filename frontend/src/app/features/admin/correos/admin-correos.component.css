@@ -1,0 +1,52 @@
+.acciones { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.prueba { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+.prueba input { max-width: 320px; }
+
+.bandeja { display: flex; flex-direction: column; gap: 8px; }
+
+.correo {
+  border: 1px solid var(--linea);
+  border-radius: 10px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.correo.abierto { border-color: rgba(214, 40, 40, .45); }
+
+.correo-fila {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 90px minmax(120px, 1fr) minmax(150px, 1.4fr) auto auto 16px;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  background: transparent;
+  border: 0;
+  color: var(--texto);
+  text-align: left;
+  font-size: .84rem;
+  cursor: pointer;
+}
+.correo-fila:hover { background: rgba(255, 255, 255, .03); }
+
+.destino { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.asunto { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fecha { white-space: nowrap; }
+
+.correo-cuerpo { padding: 0 12px 12px; border-top: 1px solid var(--linea); }
+
+.vista {
+  width: 100%;
+  height: 420px;
+  border: 1px solid var(--linea);
+  border-radius: 8px;
+  background: #fff;
+}
+
+@media (max-width: 760px) {
+  .correo-fila {
+    grid-template-columns: 80px 1fr 16px;
+    grid-auto-rows: auto;
+  }
+  .asunto, .fecha, .mono { display: none; }
+}

@@ -1,0 +1,119 @@
+<section class="contenedor admin">
+  <div class="admin-cabecera">
+    <div>
+      <h1 class="titulo-seccion">Administración</h1>
+      <p class="subtitulo">Clientes registrados, roles y estado de la cuenta</p>
+    </div>
+    <button class="btn-fantasma" type="button" (click)="cargar()">
+      <i class="bi bi-arrow-clockwise"></i> Actualizar
+    </button>
+  </div>
+
+  <app-admin-nav></app-admin-nav>
+
+  @if (error()) {
+    <div class="aviso">{{ error() }}</div>
+  }
+
+  <div class="panel">
+    <div class="panel-toolbar">
+      <div class="buscador">
+        <i class="bi bi-search"></i>
+        <input type="search" placeholder="Buscar nombre, DNI, correo o teléfono"
+               [value]="busqueda()" (input)="buscar($event)">
+      </div>
+      <span class="tenue chico">{{ filtrados().length }} de {{ clientes().length }}</span>
+    </div>
+
+    <div class="filtros">
+      @for (r of roles; track r.valor) {
+        <button class="chip" type="button"
+                [class.activo]="rol() === r.valor" (click)="filtrarRol(r.valor)">{{ r.etiqueta }}</button>
+      }
+      <span class="separador"></span>
+      @for (e of estados; track e.valor) {
+        <button class="chip" type="button"
+                [class.activo]="estado() === e.valor" (click)="filtrarEstado(e.valor)">{{ e.etiqueta }}</button>
+      }
+    </div>
+
+    @if (cargando()) {
+      <div class="cargando"><span class="spinner-border spinner-border-sm"></span> Cargando clientes…</div>
+    } @else if (visibles().length === 0) {
+      <div class="vacio">
+        <i class="bi bi-person-x"></i>
+        {{ clientes().length === 0 ? 'No hay clientes registrados.' : 'No se encontraron resultados.' }}
+      </div>
+    } @else {
+      <div class="tabla-scroll">
+        <table class="tabla">
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th>Contacto</th>
+              <th>Rol</th>
+              <th>Estado</th>
+              <th class="der">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of visibles(); track c.idCliente) {
+              <tr>
+                <td>
+                  <div class="quien">
+                    <span class="avatar">{{ inicial(c) }}</span>
+                    <div>
+                      <strong>{{ c.nombre }}</strong>
+                      <div class="tenue chico">DNI {{ c.dni }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="contacto">{{ c.email }}</div>
+                  <div class="tenue chico">{{ c.telefono || 'Sin teléfono' }}</div>
+                </td>
+                <td><span class="pildora rol">{{ rolTexto(c) }}</span></td>
+                <td>
+                  <div class="estados">
+                    <span class="pildora" [class.ok]="c.activo === 1" [class.no]="c.activo !== 1">
+                      {{ c.activo === 1 ? 'Activo' : 'Inactivo' }}
+                    </span>
+                    @if (c.verificado === 1) {
+                      <span class="pildora ok suave" title="Correo verificado"><i class="bi bi-check2"></i></span>
+                    }
+                  </div>
+                </td>
+                <td>
+                  <div class="fila-acciones">
+                    <button class="btn-icono" type="button"
+                            [title]="c.activo === 1 ? 'Desactivar' : 'Reactivar'"
+                            [disabled]="ocupado() === c.idCliente" (click)="toggleActivo(c)">
+                      <i class="bi" [class.bi-toggle-on]="c.activo === 1" [class.bi-toggle-off]="c.activo !== 1"></i>
+                    </button>
+                    <button class="btn-icono peligro" type="button" title="Eliminar"
+                            [disabled]="ocupado() === c.idCliente" (click)="eliminar(c)">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (totalPaginas() > 1) {
+        <div class="paginacion">
+          <button class="btn-fantasma chico" type="button" [disabled]="pagina() === 1" (click)="irPagina(pagina() - 1)">
+            <i class="bi bi-chevron-left"></i> Anterior
+          </button>
+          <span class="tenue chico">Página {{ pagina() }} de {{ totalPaginas() }}</span>
+          <button class="btn-fantasma chico" type="button"
+                  [disabled]="pagina() === totalPaginas()" (click)="irPagina(pagina() + 1)">
+            Siguiente <i class="bi bi-chevron-right"></i>
+          </button>
+        </div>
+      }
+    }
+  </div>
+</section>

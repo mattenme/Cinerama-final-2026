@@ -1,0 +1,22 @@
+<a class="tarjeta" [routerLink]="['/pelicula', pelicula.idPelicula]">
+  <div class="poster">
+    <div class="respaldo">
+      <i class="bi bi-camera-reels"></i>
+      <span>{{ pelicula.titulo }}</span>
+    </div>
+    @if (imagen()) {
+      <img loading="lazy" decoding="async" [src]="imagen()!" [alt]="pelicula.titulo" (error)="ocultar($event)">
+    }
+    @if (pelicula.destacado === 1) {
+      <span class="cinta">Destacada</span>
+    }
+  </div>
+  <div class="datos">
+    <h3>{{ pelicula.titulo }}</h3>
+    <p class="meta">
+      @if (pelicula.genero) { <span>{{ pelicula.genero }}</span> }
+      <span>{{ pelicula.duracionMinutos }} min</span>
+    </p>
+    <span class="ver">Ver horarios <i class="bi bi-arrow-right"></i></span>
+  </div>
+</a>
