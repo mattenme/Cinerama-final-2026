@@ -80,6 +80,23 @@ function Wait-ForHttp {
     return $false
 }
 
+function Test-BackendBuildRequired {
+    param([string]$BackendDir, [string]$JarPath)
+
+    if (-not (Test-Path $JarPath)) {
+        return $true
+    }
+
+    $referencia = (Get-Item $JarPath).LastWriteTime
+    $pom = Get-Item (Join-Path $BackendDir 'pom.xml') -ErrorAction SilentlyContinue
+    if ($null -ne $pom -and $pom.LastWriteTime -gt $referencia) {
+        return $true
+    }
+
+    $fuentes = Get-ChildItem (Join-Path $BackendDir 'src') -Recurse -File -ErrorAction SilentlyContinue
+    return @($fuentes | Where-Object { $_.LastWriteTime -gt $referencia }).Count -gt 0
+}
+
 function Stop-AppProcess {
     param([System.Diagnostics.Process]$Process)
 
@@ -132,8 +149,10 @@ try {
         throw 'Oracle XE no respondió en el puerto 1521. Revisa sus servicios y la configuración local de Oracle.'
     }
 
-    if (-not (Test-Path $jarPath)) {
-        Write-Host 'Compilando el backend por primera vez...'
+    if (Test-BackendBuildRequired -BackendDir $backendDir -JarPath $jarPath) {
+        # Sin esto se ejecutaba un jar viejo: la web cargaba datos pero el login
+        # respondía sin token porque el backend compilado no tenía los cambios.
+        Write-Host 'Compilando el backend con el código actual...'
         Push-Location $backendDir
         try {
             & (Join-Path $backendDir 'mvnw.cmd') -q -DskipTests package
