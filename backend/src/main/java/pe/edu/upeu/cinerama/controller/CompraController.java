@@ -1,5 +1,7 @@
 package pe.edu.upeu.cinerama.controller;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.CacheControl;
@@ -9,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pe.edu.upeu.cinerama.dto.CompraDTO;
 import pe.edu.upeu.cinerama.dto.CompraRequestDTO;
+import pe.edu.upeu.cinerama.exception.BadRequestException;
 import pe.edu.upeu.cinerama.exception.ResourceNotFoundException;
 import pe.edu.upeu.cinerama.security.IdentidadActual;
 import pe.edu.upeu.cinerama.services.ICompraService;
@@ -19,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/v1/compras")
+@SecurityRequirement(name = "bearerAuth")
 public class CompraController {
 
     private final ICompraService compraService;
@@ -50,6 +54,7 @@ public class CompraController {
         return ResponseEntity.ok(compraService.listarConfirmadasPorFuncion(idFuncion));
     }
 
+    @SecurityRequirements
     @GetMapping("/funcion/{idFuncion}/asientos-ocupados")
     public ResponseEntity<List<Long>> listarAsientosOcupados(@PathVariable Long idFuncion) {
         return ResponseEntity.ok(compraService.listarAsientosOcupados(idFuncion));
@@ -76,6 +81,10 @@ public class CompraController {
     @PostMapping("/procesar")
     public ResponseEntity<List<CompraDTO>> procesar(@Valid @RequestBody CompraRequestDTO dto,
                                                     HttpServletRequest request) {
+        if (IdentidadActual.esAdmin(request)) {
+            throw new BadRequestException(
+                    "El administrador no puede realizar compras; usa una cuenta de cliente");
+        }
         Long idCliente = IdentidadActual.idCliente(request);
         return new ResponseEntity<>(compraService.procesarCompra(dto, idCliente), HttpStatus.CREATED);
     }

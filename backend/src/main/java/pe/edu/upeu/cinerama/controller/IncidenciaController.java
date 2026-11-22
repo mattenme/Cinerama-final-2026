@@ -1,5 +1,6 @@
 package pe.edu.upeu.cinerama.controller;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -7,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pe.edu.upeu.cinerama.dto.IncidenciaDTO;
 import pe.edu.upeu.cinerama.dto.IncidenciaRequestDTO;
+import pe.edu.upeu.cinerama.exception.BadRequestException;
 import pe.edu.upeu.cinerama.exception.ResourceNotFoundException;
 import pe.edu.upeu.cinerama.security.IdentidadActual;
 import pe.edu.upeu.cinerama.services.IIncidenciaService;
@@ -15,6 +17,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/incidencias")
+@SecurityRequirement(name = "bearerAuth")
 public class IncidenciaController {
 
     private final IIncidenciaService incidenciaService;
@@ -45,6 +48,7 @@ public class IncidenciaController {
 
     @GetMapping("/mias")
     public ResponseEntity<List<IncidenciaDTO>> listarMias(HttpServletRequest request) {
+        rechazarAdmin(request);
         Long idCliente = IdentidadActual.idCliente(request);
         return ResponseEntity.ok(incidenciaService.listarPorCliente(idCliente));
     }
@@ -59,8 +63,17 @@ public class IncidenciaController {
     @PostMapping
     public ResponseEntity<IncidenciaDTO> crear(@Valid @RequestBody IncidenciaRequestDTO dto,
                                                HttpServletRequest request) {
+        rechazarAdmin(request);
         Long idCliente = IdentidadActual.idCliente(request);
         return new ResponseEntity<>(incidenciaService.crear(dto, idCliente), HttpStatus.CREATED);
+    }
+
+    /** El administrador atiende el soporte, así que no registra incidencias como cliente. */
+    private void rechazarAdmin(HttpServletRequest request) {
+        if (IdentidadActual.esAdmin(request)) {
+            throw new BadRequestException(
+                    "El administrador gestiona el soporte y no puede registrar incidencias");
+        }
     }
 
     @PutMapping("/{id}")

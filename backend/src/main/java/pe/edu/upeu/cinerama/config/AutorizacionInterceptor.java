@@ -126,13 +126,13 @@ public class AutorizacionInterceptor implements HandlerInterceptor {
 
     private boolean exigirPuerta(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String rol = rol(request);
-        if (ADMIN.equalsIgnoreCase(rol) || EMPLEADO.equalsIgnoreCase(rol)) {
+        if (EMPLEADO.equalsIgnoreCase(rol)) {
             return true;
         }
         if (idCliente(request) == null) {
             return negar(response, 401, "Debes iniciar sesión para usar el módulo de puerta");
         }
-        return negar(response, 403, "Esta operación requiere rol EMPLEADO o ADMIN");
+        return negar(response, 403, "El control de puerta es exclusivo del personal EMPLEADO");
     }
 
     private boolean exigirPropietario(HttpServletRequest request, HttpServletResponse response,
