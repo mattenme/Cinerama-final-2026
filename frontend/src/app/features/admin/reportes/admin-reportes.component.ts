@@ -1,5 +1,4 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { AdminNavComponent } from '../../../shared/admin-nav/admin-nav.component';
 
 import { formatoFechaHora, formatoSoles } from '../../../core/services/api';
@@ -15,7 +14,7 @@ import {
 @Component({
   selector: 'app-admin-reportes',
   standalone: true,
-  imports: [RouterLink, AdminNavComponent],
+  imports: [AdminNavComponent],
   templateUrl: './admin-reportes.component.html',
   styleUrl: './admin-reportes.component.css'
 })
@@ -31,16 +30,52 @@ export class AdminReportesComponent implements OnInit {
   readonly cargando = signal(true);
   readonly error = signal<string | null>(null);
 
+  readonly limite = signal(5);
+  readonly dias = signal(30);
+
+  /** Totales para las tarjetas resumen. */
+  readonly totalEntradas = computed(() =>
+    this.ventas().reduce((total, v) => total + Number(v.entradas ?? 0), 0)
+  );
+
+  readonly totalDulceria = computed(() =>
+    this.ventas().reduce((total, v) => total + Number(v.dulceria ?? 0), 0)
+  );
+
+  readonly totalIngresos = computed(() => this.totalEntradas() + this.totalDulceria());
+
+  readonly totalCompras = computed(() =>
+    this.ventas().reduce((total, v) => total + Number(v.compras ?? 0), 0)
+  );
+
+  readonly totalButacas = computed(() =>
+    this.ventas().reduce((total, v) => total + Number(v.butacas ?? 0), 0)
+  );
+
+  readonly ocupacionPromedio = computed(() => {
+    const filas = this.ocupacion();
+    if (filas.length === 0) return 0;
+    const suma = filas.reduce((total, o) => total + this.porcentaje(o), 0);
+    return Math.round(suma / filas.length);
+  });
+
+  /** Reparto de ingresos para el gráfico de dona. */
+  readonly pctEntradas = computed(() => {
+    const total = this.totalIngresos();
+    return total > 0 ? Math.round((this.totalEntradas() * 100) / total) : 0;
+  });
+
+  /** Complemento exacto: ambos segmentos de la dona siempre suman 100%. */
+  readonly pctDulceria = computed(() => (this.totalIngresos() > 0 ? 100 - this.pctEntradas() : 0));
+
+  /** Películas ordenadas por ingreso para el gráfico de columnas. */
+  readonly ventasOrdenadas = computed(() =>
+    [...this.ventas()].sort((a, b) => Number(b.total ?? 0) - Number(a.total ?? 0))
+  );
+
   readonly maxVenta = computed(() =>
     Math.max(1, ...this.ventas().map((v) => Number(v.total ?? 0)))
   );
-
-  readonly maxOcupacion = computed(() =>
-    Math.max(1, ...this.ocupacion().map((o) => this.porcentaje(o)))
-  );
-
-  readonly limite = signal(5);
-  readonly dias = signal(30);
 
   private pendientes = 0;
 
@@ -177,12 +212,15 @@ export class AdminReportesComponent implements OnInit {
     return fila.variacionPct > 0 ? 'sube' : 'baja';
   }
 
-  anchoVenta(v: VentaPelicula): number {
-    return Math.max(2, Math.round((Number(v.total ?? 0) / this.maxVenta()) * 100));
+  /** Altura relativa de cada columna del gráfico de ventas por película. */
+  alturaVenta(v: VentaPelicula): number {
+    return Math.max(3, Math.round((Number(v.total ?? 0) / this.maxVenta()) * 100));
   }
 
-  anchoOcupacion(o: OcupacionFuncion): number {
-    return Math.max(2, Math.round((this.porcentaje(o) / this.maxOcupacion()) * 100));
+  /** Escala propia por métrica para las barras de comparación. */
+  anchoComparacion(fila: ComparacionPeriodo, numero?: number | null): number {
+    const maximo = Math.max(1, Number(fila.actual ?? 0), Number(fila.anterior ?? 0));
+    return Math.max(2, Math.round((Number(numero ?? 0) / maximo) * 100));
   }
 
   descargarVentas() {
