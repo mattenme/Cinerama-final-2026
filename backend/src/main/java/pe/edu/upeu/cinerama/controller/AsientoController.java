@@ -1,5 +1,6 @@
 package pe.edu.upeu.cinerama.controller;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,11 +44,13 @@ public class AsientoController {
                 .orElseThrow(() -> new ResourceNotFoundException("Asiento no encontrado con id: " + id));
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping
     public ResponseEntity<AsientoDTO> crear(@Valid @RequestBody AsientoDTO dto) {
         return new ResponseEntity<>(asientoService.crear(dto), HttpStatus.CREATED);
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/sala/{idSala}/generar")
     public ResponseEntity<List<AsientoDTO>> generarButacas(@PathVariable Long idSala,
                                                            @Valid @RequestBody GenerarAsientosDTO dto) {
@@ -56,6 +59,7 @@ public class AsientoController {
                 HttpStatus.CREATED);
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         if (asientoService.eliminar(id)) {

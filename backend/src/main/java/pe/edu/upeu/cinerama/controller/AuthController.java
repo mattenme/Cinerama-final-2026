@@ -1,5 +1,6 @@
 package pe.edu.upeu.cinerama.controller;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -45,6 +46,7 @@ public class AuthController {
         return ResponseEntity.ok(authService.reenviarCodigo(dto));
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/check")
     public ResponseEntity<AuthResponseDTO> check(HttpServletRequest request) {
         Long clienteId = IdentidadActual.idCliente(request);
@@ -67,6 +69,7 @@ public class AuthController {
         ));
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/renovar")
     public ResponseEntity<AuthResponseDTO> renovar(HttpServletRequest request) {
         String token = IdentidadActual.token(request);
@@ -89,6 +92,7 @@ public class AuthController {
         ));
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/logout")
     public ResponseEntity<AuthResponseDTO> logout() {
         return ResponseEntity.ok(new AuthResponseDTO(

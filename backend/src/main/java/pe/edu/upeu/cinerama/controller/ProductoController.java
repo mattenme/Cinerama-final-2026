@@ -1,5 +1,6 @@
 package pe.edu.upeu.cinerama.controller;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -45,11 +46,13 @@ public class ProductoController {
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con id: " + id));
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping
     public ResponseEntity<ProductoDTO> crear(@Valid @RequestBody ProductoDTO dto) {
         return new ResponseEntity<>(productoService.crear(dto), HttpStatus.CREATED);
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @PutMapping("/{id}")
     public ResponseEntity<ProductoDTO> actualizar(@PathVariable Long id,
                                                   @Valid @RequestBody ProductoDTO dto) {
@@ -58,11 +61,13 @@ public class ProductoController {
                 .orElseThrow(() -> new ResourceNotFoundException("No se pudo actualizar con id: " + id));
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @PatchMapping("/{id}/activo")
     public ResponseEntity<ProductoDTO> cambiarActivo(@PathVariable Long id) {
         return ResponseEntity.ok(productoService.cambiarActivo(id));
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/{id}/imagen")
     public ResponseEntity<Map<String, String>> subirImagen(@PathVariable Long id,
                                                            @RequestParam("file") MultipartFile file) throws IOException {
@@ -70,6 +75,7 @@ public class ProductoController {
         return ResponseEntity.ok(Map.of("imagenUrl", imagenUrl));
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         if (productoService.eliminar(id)) {

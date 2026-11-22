@@ -1,5 +1,6 @@
 package pe.edu.upeu.cinerama.controller;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/puerta")
+@SecurityRequirement(name = "bearerAuth")
 public class PuertaController {
 
     private final IPuertaService puertaService;

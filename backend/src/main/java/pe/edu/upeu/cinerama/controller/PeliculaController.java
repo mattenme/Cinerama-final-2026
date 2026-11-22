@@ -1,5 +1,6 @@
 package pe.edu.upeu.cinerama.controller;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -45,11 +46,13 @@ public class PeliculaController {
                 .orElseThrow(() -> new ResourceNotFoundException("Película no encontrada con id: " + id));
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping
     public ResponseEntity<PeliculaDTO> crear(@Valid @RequestBody PeliculaDTO dto) {
         return new ResponseEntity<>(peliculaService.crear(dto), HttpStatus.CREATED);
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @PutMapping("/{id}")
     public ResponseEntity<PeliculaDTO> actualizar(@PathVariable Long id,
                                                   @Valid @RequestBody PeliculaDTO dto) {
@@ -58,16 +61,19 @@ public class PeliculaController {
                 .orElseThrow(() -> new ResourceNotFoundException("No se pudo actualizar con id: " + id));
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @PatchMapping("/{id}/activo")
     public ResponseEntity<PeliculaDTO> cambiarActivo(@PathVariable Long id) {
         return ResponseEntity.ok(peliculaService.cambiarActivo(id));
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @PatchMapping("/{id}/destacado")
     public ResponseEntity<PeliculaDTO> cambiarDestacado(@PathVariable Long id) {
         return ResponseEntity.ok(peliculaService.cambiarDestacado(id));
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/{id}/imagen")
     public ResponseEntity<Map<String, String>> subirImagen(@PathVariable Long id,
                                                            @RequestParam("file") MultipartFile file) throws IOException {
@@ -75,6 +81,7 @@ public class PeliculaController {
         return ResponseEntity.ok(Map.of("imagenUrl", imagenUrl));
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         if (peliculaService.eliminar(id)) {

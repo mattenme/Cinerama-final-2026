@@ -1,5 +1,6 @@
 package pe.edu.upeu.cinerama.controller;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -44,11 +45,13 @@ public class PromocionController {
                 .orElseThrow(() -> new ResourceNotFoundException("Promoción no encontrada con id: " + id));
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping
     public ResponseEntity<PromocionDTO> crear(@Valid @RequestBody PromocionDTO dto) {
         return new ResponseEntity<>(promocionService.crear(dto), HttpStatus.CREATED);
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @PutMapping("/{id}")
     public ResponseEntity<PromocionDTO> actualizar(@PathVariable Long id,
                                                    @Valid @RequestBody PromocionDTO dto) {
@@ -57,11 +60,13 @@ public class PromocionController {
                 .orElseThrow(() -> new ResourceNotFoundException("No se pudo actualizar con id: " + id));
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @PatchMapping("/{id}/activo")
     public ResponseEntity<PromocionDTO> cambiarActivo(@PathVariable Long id) {
         return ResponseEntity.ok(promocionService.cambiarActivo(id));
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         if (promocionService.eliminar(id)) {

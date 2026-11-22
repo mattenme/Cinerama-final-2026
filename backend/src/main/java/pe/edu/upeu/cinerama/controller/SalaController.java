@@ -1,5 +1,6 @@
 package pe.edu.upeu.cinerama.controller;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,11 +38,13 @@ public class SalaController {
                 .orElseThrow(() -> new ResourceNotFoundException("Sala no encontrada con id: " + id));
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping
     public ResponseEntity<SalaDTO> crear(@Valid @RequestBody SalaDTO dto) {
         return new ResponseEntity<>(salaService.crear(dto), HttpStatus.CREATED);
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @PutMapping("/{id}")
     public ResponseEntity<SalaDTO> actualizar(@PathVariable Long id, @Valid @RequestBody SalaDTO dto) {
         return salaService.actualizar(id, dto)
@@ -49,11 +52,13 @@ public class SalaController {
                 .orElseThrow(() -> new ResourceNotFoundException("No se pudo actualizar con id: " + id));
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @PatchMapping("/{id}/activo")
     public ResponseEntity<SalaDTO> cambiarActivo(@PathVariable Long id) {
         return ResponseEntity.ok(salaService.cambiarActivo(id));
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         if (salaService.eliminar(id)) {

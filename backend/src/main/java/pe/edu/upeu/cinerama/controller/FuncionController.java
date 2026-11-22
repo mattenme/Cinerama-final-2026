@@ -1,5 +1,6 @@
 package pe.edu.upeu.cinerama.controller;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -48,11 +49,13 @@ public class FuncionController {
                 .orElseThrow(() -> new ResourceNotFoundException("Función no encontrada con id: " + id));
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping
     public ResponseEntity<FuncionDTO> crear(@Valid @RequestBody FuncionRequestDTO dto) {
         return new ResponseEntity<>(funcionService.crear(dto), HttpStatus.CREATED);
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @PutMapping("/{id}")
     public ResponseEntity<FuncionDTO> actualizar(@PathVariable Long id,
                                                  @Valid @RequestBody FuncionRequestDTO dto) {
@@ -61,11 +64,13 @@ public class FuncionController {
                 .orElseThrow(() -> new ResourceNotFoundException("No se pudo actualizar con id: " + id));
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @PatchMapping("/{id}/activo")
     public ResponseEntity<FuncionDTO> cambiarActivo(@PathVariable Long id) {
         return ResponseEntity.ok(funcionService.cambiarActivo(id));
     }
 
+    @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         if (funcionService.eliminar(id)) {
