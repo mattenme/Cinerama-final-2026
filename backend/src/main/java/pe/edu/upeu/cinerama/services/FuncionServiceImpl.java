@@ -15,8 +15,8 @@ import pe.edu.upeu.cinerama.repository.SalaRepository;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 
 @Service
@@ -121,14 +121,21 @@ public class FuncionServiceImpl implements IFuncionService {
             throw new BadRequestException("La fecha y hora son obligatorias");
         }
 
+        // Se compara al minuto para que editar una función existente (la BD guarda segundos)
+        // no se confunda con un cambio de fecha.
+        boolean fechaNueva = funcion.getHoraInicio() == null
+                || !funcion.getHoraInicio().truncatedTo(ChronoUnit.MINUTES)
+                        .equals(dto.horaInicio().truncatedTo(ChronoUnit.MINUTES));
+        if (fechaNueva && dto.horaInicio().isBefore(LocalDateTime.now().minusMinutes(1))) {
+            throw new BadRequestException("No se puede programar una función en una fecha u hora pasada");
+        }
+
         funcion.setPelicula(pelicula);
         funcion.setSala(sala);
         funcion.setHoraInicio(dto.horaInicio());
 
-        String estado = dto.estado();
-        funcion.setEstado(estado == null || estado.isBlank()
-                ? "PROGRAMADA"
-                : estado.trim().toUpperCase(Locale.ROOT));
+        // El estado no se captura desde el panel: se calcula según la fecha y hora.
+        funcion.setEstado(calcularEstado(funcion));
 
         funcion.setActivo(dto.activo() == null ? 1 : dto.activo());
         if (dto.precio() != null) {
@@ -166,6 +173,19 @@ public class FuncionServiceImpl implements IFuncionService {
         }
     }
 
+    /** Estado automático: PROGRAMADA antes de iniciar, EN CURSO mientras dura y FINALIZADA al terminar. */
+    private String calcularEstado(Funcion funcion) {
+        if (funcion.getHoraInicio() == null) {
+            return "PROGRAMADA";
+        }
+        LocalDateTime ahora = LocalDateTime.now();
+        if (ahora.isBefore(funcion.getHoraInicio())) {
+            return "PROGRAMADA";
+        }
+        LocalDateTime fin = funcion.getHoraFin();
+        return fin != null && ahora.isBefore(fin) ? "EN CURSO" : "FINALIZADA";
+    }
+
     private int duracionDe(Pelicula pelicula) {
         Integer duracion = pelicula != null ? pelicula.getDuracionMinutos() : null;
         return duracion != null && duracion > 0 ? duracion : 120;
@@ -179,7 +199,7 @@ public class FuncionServiceImpl implements IFuncionService {
                 funcion.getSala().getIdSala(),
                 funcion.getSala().getNombre(),
                 funcion.getHoraInicio(),
-                funcion.getEstado(),
+                calcularEstado(funcion),
                 funcion.getActivo(),
                 funcion.getPrecioEfectivo()
         );

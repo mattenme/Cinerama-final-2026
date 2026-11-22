@@ -60,6 +60,12 @@ class FuncionServiceImplTest {
         pelicula.setDuracionMinutos(120);
     }
 
+    /** Fecha relativa para que las pruebas no dependan del día en que se ejecutan. */
+    private LocalDateTime inicioFuturo() {
+        return LocalDateTime.now().plusDays(7)
+                .withHour(19).withMinute(0).withSecond(0).withNano(0);
+    }
+
     private Funcion funcionExistente(LocalDateTime inicio) {
         Funcion funcion = new Funcion();
         funcion.setIdFuncion(9L);
@@ -72,7 +78,7 @@ class FuncionServiceImplTest {
 
     @Test
     void rechazaFuncionQueSePisaConOtraDeLaMismaSala() {
-        LocalDateTime inicio = LocalDateTime.of(2026, 11, 10, 19, 0);
+        LocalDateTime inicio = inicioFuturo();
         given(peliculaRepository.findById(1L)).willReturn(Optional.of(pelicula));
         given(salaRepository.findById(1L)).willReturn(Optional.of(sala));
         given(funcionRepository.findActivasEnRango(eq(1L), any(), any()))
@@ -89,7 +95,7 @@ class FuncionServiceImplTest {
 
     @Test
     void permiteFuncionCuandoElHorarioEstaLibre() {
-        LocalDateTime inicio = LocalDateTime.of(2026, 11, 10, 19, 0);
+        LocalDateTime inicio = inicioFuturo();
         given(peliculaRepository.findById(1L)).willReturn(Optional.of(pelicula));
         given(salaRepository.findById(1L)).willReturn(Optional.of(sala));
         given(funcionRepository.findActivasEnRango(eq(1L), any(), any()))
@@ -117,7 +123,7 @@ class FuncionServiceImplTest {
 
     @Test
     void alEditarNoSeComparaConsigoMisma() {
-        LocalDateTime inicio = LocalDateTime.of(2026, 11, 10, 19, 0);
+        LocalDateTime inicio = inicioFuturo();
         Funcion propia = funcionExistente(inicio);
         given(funcionRepository.findByIdWithRelations(9L)).willReturn(Optional.of(propia));
         given(peliculaRepository.findById(1L)).willReturn(Optional.of(pelicula));
@@ -130,5 +136,41 @@ class FuncionServiceImplTest {
         FuncionDTO resultado = service.actualizar(9L, request).orElseThrow();
 
         assertThat(resultado.idFuncion()).isEqualTo(9L);
+        assertThat(resultado.estado()).isEqualTo("PROGRAMADA");
+    }
+
+    @Test
+    void rechazaFuncionEnFechaPasada() {
+        LocalDateTime inicio = LocalDateTime.now().minusDays(2)
+                .withHour(19).withMinute(0).withSecond(0).withNano(0);
+        given(peliculaRepository.findById(1L)).willReturn(Optional.of(pelicula));
+        given(salaRepository.findById(1L)).willReturn(Optional.of(sala));
+
+        FuncionRequestDTO request = new FuncionRequestDTO(1L, 1L, inicio, null, 1, PRECIO);
+
+        assertThatThrownBy(() -> service.crear(request))
+                .isInstanceOf(BadRequestException.class)
+                .hasMessageContaining("pasada");
+
+        verify(funcionRepository, never()).save(any());
+    }
+
+    @Test
+    void permiteEditarUnaFuncionPasadaSinCambiarSuFecha() {
+        LocalDateTime inicio = LocalDateTime.now().minusDays(3)
+                .withHour(19).withMinute(0).withSecond(0).withNano(0);
+        // La BD guarda segundos: editar sin tocar la hora debe seguir permitido.
+        Funcion propia = funcionExistente(inicio.plusSeconds(25));
+        given(funcionRepository.findByIdWithRelations(9L)).willReturn(Optional.of(propia));
+        given(peliculaRepository.findById(1L)).willReturn(Optional.of(pelicula));
+        given(salaRepository.findById(1L)).willReturn(Optional.of(sala));
+        given(funcionRepository.findActivasEnRango(eq(1L), any(), any())).willReturn(List.of(propia));
+        given(funcionRepository.save(any(Funcion.class))).willAnswer(i -> i.getArgument(0));
+
+        FuncionRequestDTO request = new FuncionRequestDTO(1L, 1L, inicio, null, 1, PRECIO);
+
+        FuncionDTO resultado = service.actualizar(9L, request).orElseThrow();
+
+        assertThat(resultado.estado()).isEqualTo("FINALIZADA");
     }
 }
