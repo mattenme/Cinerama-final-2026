@@ -25,6 +25,9 @@ export class AdminCorreosComponent implements OnInit {
   readonly abierto = signal<number | null>(null);
   readonly destino = signal('');
   readonly probando = signal(false);
+  readonly servidor = signal('');
+  readonly remitente = signal('');
+  readonly resultado = signal<string | null>(null);
 
   ngOnInit(): void {
     this.cargar();
@@ -63,6 +66,9 @@ export class AdminCorreosComponent implements OnInit {
     this.service.probar(destino).subscribe({
       next: (resultado) => {
         this.probando.set(false);
+        this.servidor.set(resultado.servidor ?? '');
+        this.remitente.set(resultado.remitente ?? '');
+        this.resultado.set(resultado.mensaje ?? null);
         if (resultado.enviado) {
           this.alertas.exito('Correo enviado', resultado.mensaje);
         } else {

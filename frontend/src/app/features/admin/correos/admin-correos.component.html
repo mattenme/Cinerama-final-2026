@@ -22,6 +22,34 @@
 
   <div class="panel">
     <div class="panel-cabecera">
+      <h2>Cuenta de correo (SMTP)</h2>
+      <span class="tenue chico">backend/.env</span>
+    </div>
+    <p class="tenue chico">
+      El usuario y la contraseña del correo se configuran en el archivo
+      <strong>backend/.env</strong> (o en las variables de entorno del sistema) y se leen al iniciar el backend:
+    </p>
+    <pre class="bloque-config">MAIL_USERNAME=tu-correo&#64;gmail.com
+MAIL_PASSWORD=tu-contraseña-de-aplicación
+MAIL_FROM=tu-correo&#64;gmail.com
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587</pre>
+    <p class="tenue chico mb-0">
+      Con Gmail no sirve la contraseña normal: activa la verificación en dos pasos y genera una
+      <strong>contraseña de aplicación</strong> de 16 caracteres. Reinicia el backend después de guardar el archivo.
+    </p>
+    @if (servidor() || remitente()) {
+      <p class="tenue chico mb-0">
+        Servidor: <strong>{{ servidor() || '—' }}</strong> · Remitente: <strong>{{ remitente() || 'sin configurar' }}</strong>
+      </p>
+    }
+    @if (resultado()) {
+      <p class="tenue chico mb-0">{{ resultado() }}</p>
+    }
+  </div>
+
+  <div class="panel">
+    <div class="panel-cabecera">
       <h2>Probar SMTP</h2>
       <span class="tenue chico">POST /api/v1/admin/correo/prueba</span>
     </div>

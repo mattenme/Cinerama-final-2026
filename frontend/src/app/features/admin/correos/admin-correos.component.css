@@ -1,5 +1,16 @@
 .acciones { display: flex; gap: 8px; flex-wrap: wrap; }
 
+.bloque-config {
+  background: var(--bg-2);
+  border: 1px solid var(--linea);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin: 10px 0;
+  font-size: .8rem;
+  color: var(--texto);
+  overflow-x: auto;
+}
+
 .prueba { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
 .prueba input { max-width: 320px; }
 
