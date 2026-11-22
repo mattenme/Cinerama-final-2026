@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 
 import { Producto } from '../../core/interfaces/cinerama.interfaces';
 import { formatoSoles, urlImagen } from '../../core/services/api';
+import { AuthService } from '../../core/services/auth.service';
 import { CarritoService } from '../../core/services/carrito.service';
 import { ProductoService } from '../../core/services/catalogo.service';
 
@@ -16,6 +17,10 @@ import { ProductoService } from '../../core/services/catalogo.service';
 export class DulceriaComponent implements OnInit {
   private service = inject(ProductoService);
   readonly carrito = inject(CarritoService);
+  readonly auth = inject(AuthService);
+
+  /** El administrador no compra productos de dulcería. */
+  readonly puedeComprar = computed(() => !this.auth.esAdmin());
 
   readonly productos = signal<Producto[]>([]);
   readonly cargando = signal(true);

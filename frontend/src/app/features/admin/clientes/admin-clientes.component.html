@@ -86,14 +86,18 @@
                 <td>
                   <div class="fila-acciones">
                     <button class="btn-icono" type="button"
-                            [title]="c.activo === 1 ? 'Desactivar' : 'Reactivar'"
-                            [disabled]="ocupado() === c.idCliente" (click)="toggleActivo(c)">
+                            [title]="esMiCuenta(c) ? 'No puedes desactivar tu propia cuenta' : (c.activo === 1 ? 'Desactivar' : 'Reactivar')"
+                            [disabled]="ocupado() === c.idCliente || esMiCuenta(c)" (click)="toggleActivo(c)">
                       <i class="bi" [class.bi-toggle-on]="c.activo === 1" [class.bi-toggle-off]="c.activo !== 1"></i>
                     </button>
-                    <button class="btn-icono peligro" type="button" title="Eliminar"
-                            [disabled]="ocupado() === c.idCliente" (click)="eliminar(c)">
+                    <button class="btn-icono peligro" type="button"
+                            [title]="esMiCuenta(c) ? 'No puedes eliminar tu propia cuenta' : 'Eliminar'"
+                            [disabled]="ocupado() === c.idCliente || esMiCuenta(c)" (click)="eliminar(c)">
                       <i class="bi bi-trash"></i>
                     </button>
+                    @if (esMiCuenta(c)) {
+                      <span class="tenue chico">Tu cuenta</span>
+                    }
                   </div>
                 </td>
               </tr>

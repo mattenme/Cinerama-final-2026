@@ -11,7 +11,7 @@
     <nav #navegacion class="navegacion" [class.abierta]="menuAbierto()">
       <a routerLink="/cartelera" routerLinkActive="activo" (click)="seleccionarEnlace($event); cerrarMenu()">Cartelera</a>
       <a routerLink="/dulceria" routerLinkActive="activo" (click)="seleccionarEnlace($event); cerrarMenu()">Dulcería</a>
-      @if (auth.estaLogueado()) {
+      @if (auth.estaLogueado() && !auth.esAdmin()) {
         <a routerLink="/mis-compras" routerLinkActive="activo" (click)="seleccionarEnlace($event); cerrarMenu()">Mis compras</a>
         <a routerLink="/soporte" routerLinkActive="activo" (click)="seleccionarEnlace($event); cerrarMenu()">Soporte</a>
       }

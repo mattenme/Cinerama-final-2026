@@ -193,6 +193,14 @@ export class CheckoutComponent {
   pagar() {
     if (this.enviando()) return;
 
+    if (this.auth.esAdmin()) {
+      this.alertas.error(
+        'Cuenta de administrador',
+        'El administrador no puede realizar compras. Usa una cuenta de cliente.'
+      );
+      return;
+    }
+
     const sesion = this.auth.usuario();
     if (!sesion) {
       this.router.navigate(['/cuenta/login'], { queryParams: { returnUrl: this.returnUrl } });

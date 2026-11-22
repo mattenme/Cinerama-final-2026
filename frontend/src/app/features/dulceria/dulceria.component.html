@@ -35,7 +35,13 @@
 
     @if (filtrados().length === 0) {
       <div class="vacio"><i class="bi bi-search"></i> No se encontraron productos con ese filtro.</div>
-    } @else {
+    }     @else {
+    @if (!puedeComprar()) {
+      <div class="aviso info">
+        <i class="bi bi-shield-lock"></i>
+        Tu cuenta de administrador no puede comprar productos. Entra con una cuenta de cliente.
+      </div>
+    }
     <div class="grilla">
       @for (p of filtrados(); track p.idProducto) {
         <article class="producto">
@@ -64,14 +70,15 @@
                     <i class="bi bi-dash"></i>
                   </button>
                   <span>{{ carrito.cantidadProducto(p.idProducto!) }}</span>
-                  <button class="btn-mini" type="button" [disabled]="!carrito.puedeAgregar(p)"
-                          [title]="carrito.puedeAgregar(p) ? 'Agregar uno más' : 'No hay más unidades'",
+                  <button class="btn-mini" type="button" [disabled]="!puedeComprar() || !carrito.puedeAgregar(p)"
+                          [title]="!puedeComprar() ? 'El administrador no compra' : (carrito.puedeAgregar(p) ? 'Agregar uno más' : 'No hay más unidades')",
                           (click)="carrito.agregarProducto(p)">
                     <i class="bi bi-plus"></i>
                   </button>
                 </div>
               } @else {
-                <button class="btn-acento mini" type="button" (click)="carrito.agregarProducto(p)">
+                <button class="btn-acento mini" type="button" [disabled]="!puedeComprar()"
+                        (click)="carrito.agregarProducto(p)">
                   <i class="bi bi-plus-lg"></i> Agregar
                 </button>
               }

@@ -58,10 +58,8 @@ export class AuthService {
 
   readonly estaLogueado = computed(() => this.usuario() !== null && this.token() !== null);
   readonly esAdmin = computed(() => (this.usuario()?.rol ?? '').toUpperCase() === 'ADMIN');
-  /** ADMIN o EMPLEADO: pueden validar entradas en la puerta. */
-  readonly esEmpleado = computed(() =>
-    ['ADMIN', 'EMPLEADO'].includes((this.usuario()?.rol ?? '').toUpperCase())
-  );
+  /** Solo EMPLEADO valida entradas en la puerta; el administrador no opera puerta. */
+  readonly esEmpleado = computed(() => (this.usuario()?.rol ?? '').toUpperCase() === 'EMPLEADO');
   /** Último momento en que la persona interactuó con la app. */
   private ultimaActividad = Date.now();
 
@@ -351,11 +349,25 @@ export const adminGuard: CanActivateFn = (_ruta, estado) => {
   return auth.restaurarSesion().pipe(map(() => decidir()));
 };
 
-/** La puerta comparte el login normal: sirve para ADMIN y EMPLEADO. */
+/** La puerta comparte el login normal y solo la opera el personal EMPLEADO. */
 export const puertaGuard: CanActivateFn = (_ruta, estado) => {
   const auth = inject(AuthService);
   const router = inject(Router);
-  const decidir = () => (auth.esEmpleado() ? true : destinoLogin(router, estado.url));
+  const decidir = () =>
+    auth.esEmpleado() ? true : auth.esAdmin() ? router.createUrlTree(['/home']) : destinoLogin(router, estado.url);
+
+  if (auth.estaLogueado()) return decidir();
+  return auth.restaurarSesion().pipe(map(() => decidir()));
+};
+
+/** El soporte es para clientes: el administrador es quien lo atiende. */
+export const soporteGuard: CanActivateFn = (_ruta, estado) => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  const decidir = () => {
+    if (!auth.estaLogueado()) return destinoLogin(router, estado.url);
+    return auth.esAdmin() ? router.createUrlTree(['/home']) : true;
+  };
 
   if (auth.estaLogueado()) return decidir();
   return auth.restaurarSesion().pipe(map(() => decidir()));

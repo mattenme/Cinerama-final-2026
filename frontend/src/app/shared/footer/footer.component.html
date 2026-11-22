@@ -11,11 +11,16 @@
     </div>
     <div class="pie-col">
       <strong>Cuenta</strong>
-      <a routerLink="/cuenta/login">Ingresar</a>
-      <a routerLink="/cuenta/registro">Crear cuenta</a>
-      <a routerLink="/mis-compras">Mis compras</a>
-      <a routerLink="/soporte">Soporte</a>
-      <a routerLink="/admin/login">Acceso administración</a>
+      @if (!auth.estaLogueado()) {
+        <a routerLink="/cuenta/login">Ingresar</a>
+        <a routerLink="/cuenta/registro">Crear cuenta</a>
+        <a routerLink="/admin/login">Acceso administración</a>
+      } @else if (auth.esAdmin()) {
+        <a routerLink="/admin/peliculas">Panel de administración</a>
+      } @else {
+        <a routerLink="/mis-compras">Mis compras</a>
+        <a routerLink="/soporte">Soporte</a>
+      }
     </div>
     <div class="pie-col">
       <strong>Contacto</strong>

@@ -4,6 +4,7 @@ import { AdminNavComponent } from '../../../shared/admin-nav/admin-nav.component
 
 import { Cliente } from '../../../core/interfaces/cinerama.interfaces';
 import { AlertService } from '../../../core/services/alert.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { ClienteService } from '../../../core/services/cliente.service';
 
 @Component({
@@ -16,6 +17,7 @@ import { ClienteService } from '../../../core/services/cliente.service';
 export class AdminClientesComponent implements OnInit {
   private service = inject(ClienteService);
   private alertas = inject(AlertService);
+  private auth = inject(AuthService);
 
   readonly clientes = signal<Cliente[]>([]);
   readonly cargando = signal(true);
@@ -158,6 +160,11 @@ export class AdminClientesComponent implements OnInit {
         );
       }
     });
+  }
+
+  /** La cuenta con la que se inició sesión no puede desactivarse ni eliminarse a sí misma. */
+  esMiCuenta(cliente: Cliente): boolean {
+    return !!cliente.idCliente && cliente.idCliente === this.auth.usuario()?.clienteId;
   }
 
   rolTexto(cliente: Cliente): string {

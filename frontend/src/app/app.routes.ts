@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 
-import { adminGuard, authGuard, puertaGuard } from './core/services/auth.service';
+import { adminGuard, authGuard, puertaGuard, soporteGuard } from './core/services/auth.service';
 import { salirConAsientosGuard } from './core/guard/salir-asientos.guard';
 import { MainLayoutComponent } from './shared/layouts/main-layout/main-layout.component';
 import { HomeComponent } from './features/home/home.component';
@@ -36,7 +36,7 @@ export const routes: Routes = [
 
       { path: 'confirmacion/:id', component: ConfirmacionComponent },
       { path: 'mis-compras', component: MisComprasComponent, canActivate: [authGuard] },
-      { path: 'soporte', component: SoporteComponent, canActivate: [authGuard] },
+      { path: 'soporte', component: SoporteComponent, canActivate: [soporteGuard] },
       { path: 'puerta', component: PuertaComponent, canActivate: [puertaGuard] },
       { path: 'cuenta/login', component: LoginComponent },
       { path: 'cuenta/registro', component: RegistroComponent },
