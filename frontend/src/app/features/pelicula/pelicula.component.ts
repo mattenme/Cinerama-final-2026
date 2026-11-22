@@ -82,6 +82,9 @@ export class PeliculaComponent implements OnInit {
     this.dias().reduce((total, dia) => total + dia.funciones.length, 0)
   );
 
+  /** El administrador gestiona el sistema: no compra entradas ni dulcería. */
+  readonly puedeComprar = computed(() => !this.auth.esAdmin());
+
   readonly precio = computed(() =>
     Number(
       this.funcionSeleccionada()?.precio ??
@@ -111,6 +114,10 @@ export class PeliculaComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    if (!this.puedeComprar()) {
+      this.carrito.limpiar();
+    }
+
     const id = Number(this.ruta.snapshot.paramMap.get('id'));
 
     this.productoService.listarActivos().subscribe({
@@ -169,7 +176,7 @@ export class PeliculaComponent implements OnInit {
   }
 
   productoSePuedeAgregar(producto: Producto): boolean {
-    return !this.productoAgotado(producto) && this.carrito.puedeAgregar(producto);
+    return this.puedeComprar() && !this.productoAgotado(producto) && this.carrito.puedeAgregar(producto);
   }
 
   elegirDia(indice: number) {
@@ -204,6 +211,13 @@ export class PeliculaComponent implements OnInit {
   }
 
   async elegirButaca(asiento: Asiento) {
+    if (!this.puedeComprar()) {
+      await this.alertas.info(
+        'Cuenta de administrador',
+        'El administrador no puede comprar entradas. Usa una cuenta de cliente.'
+      );
+      return;
+    }
     if (this.noDisponible(asiento)) return;
 
     const seleccionadas = this.carrito.asientos().length;

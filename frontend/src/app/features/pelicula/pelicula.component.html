@@ -89,6 +89,12 @@
 
         @if (funcionSeleccionada(); as f) {
           <div class="sala">
+            @if (!puedeComprar()) {
+              <div class="aviso info mb-3">
+                <i class="bi bi-shield-lock"></i>
+                Tu cuenta de administrador no puede comprar entradas. Entra con una cuenta de cliente para reservar.
+              </div>
+            }
             <div class="pantalla">PANTALLA</div>
 
             @if (cargandoSalas()) {
@@ -117,7 +123,7 @@
                         [class.elegida]="butacaSeleccionada(b)"
                         [class.ocupada]="butacaOcupada(b)"
                         [class.bloqueada]="butacaBloqueada(b)"
-                        [disabled]="noDisponible(b)"
+                        [disabled]="noDisponible(b) || !puedeComprar()"
                         [title]="fila.fila + b.numero + (butacaOcupada(b) ? ' (ocupada)' : '')"
                         (click)="elegirButaca(b)">
                         {{ b.numero }}
