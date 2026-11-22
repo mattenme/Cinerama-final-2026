@@ -107,18 +107,18 @@
       </div>
 
       <label class="form-label">Fecha y hora *</label>
-      <input class="form-control mb-3" type="datetime-local" name="hora" [(ngModel)]="horaLocal">
+      <input class="form-control mb-3" type="datetime-local" name="hora" [min]="minFecha" [(ngModel)]="horaLocal">
+      <p class="tenue chico">No se pueden programar funciones en fechas pasadas.</p>
 
       <label class="form-label">Precio por butaca (S/) *</label>
       <input class="form-control mb-3" type="number" min="0" step="0.5"
              name="precio" [(ngModel)]="modelo.precio">
 
-      <label class="form-label">Estado</label>
-      <select class="form-select mb-3" name="estado" [(ngModel)]="modelo.estado">
-        @for (e of estados; track e) {
-          <option [ngValue]="e">{{ e }}</option>
-        }
-      </select>
+      <div class="aviso info mb-3">
+        <i class="bi bi-magic"></i>
+        El estado es automático: <strong>Programada</strong> antes de iniciar,
+        <strong>En curso</strong> mientras dura y <strong>Finalizada</strong> al terminar.
+      </div>
 
       <div class="checks">
         <label>

@@ -1,6 +1,5 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { AdminNavComponent } from '../../../shared/admin-nav/admin-nav.component';
 import { forkJoin } from 'rxjs';
 
@@ -12,7 +11,7 @@ import { FuncionService, PeliculaService, SalaService } from '../../../core/serv
 @Component({
   selector: 'app-admin-funciones',
   standalone: true,
-  imports: [FormsModule, RouterLink, AdminNavComponent],
+  imports: [FormsModule, AdminNavComponent],
   templateUrl: './admin-funciones.component.html',
   styleUrl: './admin-funciones.component.css'
 })
@@ -42,7 +41,10 @@ export class AdminFuncionesComponent implements OnInit {
 
   modelo = this.vacia();
   horaLocal = '';
-  readonly estados = ['Programada', 'En curso', 'Finalizada', 'Cancelada'];
+  /** Fecha mínima aceptada por el selector: ahora (no se programan funciones pasadas). */
+  get minFecha(): string {
+    return new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  }
 
   ngOnInit(): void {
     this.cargar();
@@ -80,7 +82,7 @@ export class AdminFuncionesComponent implements OnInit {
   }
 
   editar(f: Funcion) {
-    this.modelo = { ...f, estado: this.normalizarEstado(f.estado) };
+    this.modelo = { ...f };
     this.horaLocal = AIsoDatetimeLocal(f.horaInicio);
     this.editando.set(f);
     this.mostrarForm.set(true);
@@ -100,16 +102,21 @@ export class AdminFuncionesComponent implements OnInit {
       return;
     }
 
+    const editando = this.editando();
+    if (!editando && new Date(this.horaLocal).getTime() < Date.now() - 60000) {
+      this.alertas.error('Fecha pasada', 'No puedes programar una función antes de hoy.');
+      return;
+    }
+
+    // El estado lo calcula el backend a partir de la fecha y hora.
     const cuerpo: Funcion = {
       idPelicula: this.modelo.idPelicula,
       idSala: this.modelo.idSala,
       horaInicio: this.horaLocal,
-      estado: this.modelo.estado,
       activo: this.modelo.activo,
       precio: this.modelo.precio
     };
     this.guardando.set(true);
-    const editando = this.editando();
 
     const peticion = editando
       ? this.service.actualizar(editando.idFuncion!, cuerpo)
@@ -170,14 +177,8 @@ export class AdminFuncionesComponent implements OnInit {
       idPelicula: 0,
       idSala: 0,
       horaInicio: '',
-      estado: 'Programada',
       activo: 1,
       precio: 20
     };
-  }
-
-  private normalizarEstado(estado?: string | null): string {
-    const valor = (estado ?? '').trim().toLowerCase();
-    return this.estados.find((e) => e.toLowerCase() === valor) ?? this.estados[0];
   }
 }
