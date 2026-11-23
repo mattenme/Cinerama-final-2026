@@ -2,6 +2,17 @@
 
 Sistema de gestión de cine: cartelera, venta de entradas con selección de butacas, dulcería, control de acceso en puerta y panel administrativo.
 
+##Campus: Tarapoto
+Docentes: Jhan Arly Sanchez Tarrillo - Sergio Omar Valladares Castillo - Joseph Ibrahim Cruz Rodriguez
+Cursos: LP2-BD2-ADS
+Título del proyecto:  Cinerama
+Grupo: 1
+Nombres de los miembros del grupo:
+- Jonathan Samuel Benavides Flores
+- Frocmen Andres Villacorta Meza
+- Jose Alonso Flores Pinchi
+- Favio Fabrizio Mejia Rojas
+  
 ## Stack
 
 | Parte | Tecnología |
