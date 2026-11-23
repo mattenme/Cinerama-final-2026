@@ -21,7 +21,3 @@ backend/uploads/*
 
 # Registros de ejecución
 *.log
-
-# Entorno local
-.freebuff/
-desktop.ini
